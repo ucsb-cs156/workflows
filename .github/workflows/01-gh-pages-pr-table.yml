@@ -11,8 +11,6 @@ on:
       GH_TOKEN:
         required: true
           
-env:
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
 permissions:
   contents: write
@@ -32,6 +30,8 @@ jobs:
         fetch-depth: 1
 
     - name: Append name of site and prs to _config.yml
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: | 
           echo "Running workflow from https://github.com/ucsb-cs156/workflows/01-gh-pages-pr-table.yml"
           echo "Running in repo: ${{github.repository}}"
