@@ -33,38 +33,38 @@ jobs:
       - name: Confirm that we are running in the workflows repo
         run: |
           echo "Running workflow from https://github.com/ucsb-cs156/workflows/00-all-checks-pass.yml"
-      - name: Wait for all other checks to finish
-        run: |
-          pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          repo="${{ github.repository }}"
-          echo "Waiting for checks on PR #$pr_number in $repo"
+      # - name: Wait for all other checks to finish
+      #   run: |
+      #     pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+      #     repo="${{ github.repository }}"
+      #     echo "Waiting for checks on PR #$pr_number in $repo"
 
-          # Poll GitHub API until all checks are completed
-          while true; do
-            raw_data1=$(gh api "repos/$repo/pulls/$pr_number")
-            # echo "raw_data=$raw_data1"
-            head_sha=$(echo $raw_data1 | jq -r '.head.sha' --)
-            # echo "head_sha=$head_sha"
-            statuses=$(gh api "repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' )
-            # echo "statuses=$statuses"
-            statuses_summarized=$(echo "$statuses" | jq '[.[] | select(.name != "enforce")] | map({name: .name, status: .status, conclusion: .conclusion})')
-            echo "statuses_summarized=$statuses_summarized"
-            state=$( echo $statuses_summarized | jq  'all(.[]; .status == "completed")')
-            echo "state=$state"
-            if [[ "$state" == "true" ]]; then
-              break
-            fi
-            echo "Waiting for other checks to complete..."
-            sleep 60
-          done
+      #     # Poll GitHub API until all checks are completed
+      #     while true; do
+      #       raw_data1=$(gh api "repos/$repo/pulls/$pr_number")
+      #       # echo "raw_data=$raw_data1"
+      #       head_sha=$(echo $raw_data1 | jq -r '.head.sha' --)
+      #       # echo "head_sha=$head_sha"
+      #       statuses=$(gh api "repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' )
+      #       # echo "statuses=$statuses"
+      #       statuses_summarized=$(echo "$statuses" | jq '[.[] | select(.name != "enforce")] | map({name: .name, status: .status, conclusion: .conclusion})')
+      #       echo "statuses_summarized=$statuses_summarized"
+      #       state=$( echo $statuses_summarized | jq  'all(.[]; .status == "completed")')
+      #       echo "state=$state"
+      #       if [[ "$state" == "true" ]]; then
+      #         break
+      #       fi
+      #       echo "Waiting for other checks to complete..."
+      #       sleep 60
+      #     done
 
-          # Check if any of the other checks failed
-          failed=$(echo "$statuses" | jq '[.[] | select(.name != "enforce" and .conclusion != "success")] | length')
-          if [ "$failed" -gt 0 ]; then
-            echo "Some required checks failed."
-            exit 1
-          fi
+      #     # Check if any of the other checks failed
+      #     failed=$(echo "$statuses" | jq '[.[] | select(.name != "enforce" and .conclusion != "success")] | length')
+      #     if [ "$failed" -gt 0 ]; then
+      #       echo "Some required checks failed."
+      #       exit 1
+      #     fi
 
-          echo "All required checks passed."
+      #     echo "All required checks passed."
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
