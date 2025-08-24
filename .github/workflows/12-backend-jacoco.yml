@@ -8,8 +8,6 @@ on:
     secrets:
       GH_TOKEN:
         required: true
-      TEST_PROPERTIES:
-        required: false
     inputs:
       JAVA_DISTRIBUTION:
         required: false
@@ -38,8 +36,6 @@ jobs:
          cache-dependency-path: 'pom.xml' 
   
     - name: Build with Maven
-      env:
-        TEST_PROPERTIES: ${{ secrets.TEST_PROPERTIES }}
       run: mvn -ntp -B test jacoco:report verify
 
     - name: Get PR number
