@@ -20,6 +20,10 @@ permissions:
   id-token: write
   pull-requests: read
 
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+
 jobs:
   enforce:
     runs-on: ubuntu-latest
