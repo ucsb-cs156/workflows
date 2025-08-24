@@ -33,6 +33,11 @@ jobs:
       - name: Confirm that we are running in the workflows repo
         run: |
           echo "Running workflow from https://github.com/ucsb-cs156/workflows/00-all-checks-pass.yml"
+      - name: Checkout local code to establish repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+  
       # - name: Wait for all other checks to finish
       #   run: |
       #     pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
