@@ -34,7 +34,7 @@ jobs:
             # echo "head_sha=$head_sha"
             statuses=$(gh api "repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' )
             # echo "statuses=$statuses"
-            statuses_summarized=$(echo "$statuses" | jq '[.[] | select(.name != "enforce")] | map({name: .name, status: .status, conclusion: .conclusion})')
+            statuses_summarized=$(echo "$statuses" | jq '[.[] | select(.name != "enforce" and .name != "enforce / enforce")] | map({name: .name, status: .status, conclusion: .conclusion})')
             echo "statuses_summarized=$statuses_summarized"
             state=$( echo $statuses_summarized | jq  'all(.[]; .status == "completed")')
             echo "state=$state"
@@ -46,7 +46,7 @@ jobs:
           done
 
           # Check if any of the other checks failed
-          failed=$(echo "$statuses" | jq '[.[] | select(.name != "enforce" and .conclusion != "success")] | length')
+          failed=$(echo "$statuses" | jq '[.[] | select(.name != "enforce" and .name != "enforce / enforce" and .conclusion != "success")] | length')
           if [ "$failed" -gt 0 ]; then
             echo "Some required checks failed."
             exit 1
