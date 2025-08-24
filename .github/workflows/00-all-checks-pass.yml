@@ -38,11 +38,11 @@ jobs:
         with:
           fetch-depth: 1
   
-      # - name: Wait for all other checks to finish
-      #   run: |
-      #     pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-      #     repo="${{ github.repository }}"
-      #     echo "Waiting for checks on PR #$pr_number in $repo"
+      - name: Wait for all other checks to finish
+        run: |
+          pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          repo="${{ github.repository }}"
+          echo "Waiting for checks on PR #$pr_number in $repo"
 
       #     # Poll GitHub API until all checks are completed
       #     while true; do
