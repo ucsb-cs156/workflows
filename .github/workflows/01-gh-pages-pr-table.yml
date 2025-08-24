@@ -6,16 +6,13 @@
 
 name: "01-gh-pages-pr-table: Rebuild table of PRs"
 on:
-  workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
+  workflow_call:
+    secrets:
+      GH_TOKEN:
+        required: true
           
 env:
-  GH_TOKEN: ${{ github.token }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
 permissions:
   contents: write
@@ -36,6 +33,8 @@ jobs:
 
     - name: Append name of site and prs to _config.yml
       run: | 
+          echo "Running workflow from https://github.com/ucsb-cs156/workflows/01-gh-pages-pr-table.yml"
+          echo "Running in repo: ${{github.repository}}"
           CONFIG_YML=frontend/docs-index/_config.yml
           OWNER_PLUS_REPOSITORY=${{github.repository}}
           OWNER=${{ github.repository_owner }}
