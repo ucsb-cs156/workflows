@@ -29,13 +29,25 @@ jobs:
       with:
         fetch-depth: 1
 
-    - name: Append name of site and prs to _config.yml
+    - name: Create site directory and copy docs-index files
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: | 
           echo "Running workflow from https://github.com/ucsb-cs156/workflows/01-gh-pages-pr-table.yml"
           echo "Running in repo: ${{github.repository}}"
-          CONFIG_YML=frontend/docs-index/_config.yml
+
+          # Determine location of docs-index directory
+          if [ -d frontend/docs-index ]; then
+            DOCS_INDEX_DIR=frontend/docs-index
+            echo "Found docs-index directory at frontend/docs-index"
+          elif [ -d docs-index ]; then
+            DOCS_INDEX_DIR=docs-index 
+            echo "Found docs-index directory at docs-index"
+          else
+            echo "Error: docs-index directory not found." >&2
+            exit 1
+          fi
+          CONFIG_YML=${DOCS_INDEX_DIR}/_config.yml
           OWNER_PLUS_REPOSITORY=${{github.repository}}
           OWNER=${{ github.repository_owner }}
           REPOSITORY=${OWNER_PLUS_REPOSITORY/$OWNER\//}
@@ -43,12 +55,10 @@ jobs:
           echo "owner: ${OWNER}" >> ${CONFIG_YML}
           echo "repo_name: ${REPOSITORY}" >> ${CONFIG_YML}    
           echo "pull_requests: $(gh pr list -s open --json url,author,number,title,headRefName)" >> ${CONFIG_YML}
-    - name: Compose web site
-      run: |
-        mkdir -p site
-        cp -r frontend/docs-index/* site
-  
-    - name: Deploy 🚀    
+          mkdir -p site
+          cp -r ${DOCS_INDEX_DIR}/* site
+
+    - name: Deploy 🚀
       if: always() # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
