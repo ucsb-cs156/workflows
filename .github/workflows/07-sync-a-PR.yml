@@ -13,7 +13,9 @@ on:
       pr_url:
         type: string
         description: URL of a cs156 project repo pull request with a dokku deployment url in the description
-   
+
+permissions:
+      deployments: write   
 env:
   GITHUB_TOKEN: ${{ secrets.PAT }} # Store your Personal Access Token in Secrets
 
