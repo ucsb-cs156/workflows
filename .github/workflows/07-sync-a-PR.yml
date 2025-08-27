@@ -30,6 +30,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT }}
           PR_URL: ${{ github.event.inputs.pr_url }}
         run: |
+          cd python
           rm -rf pr_info.json
           python <<EOF > pr_info.json
           import os
@@ -49,11 +50,12 @@ jobs:
           echo "APP_URL=https://$(cat pr_info.json | jq -r '.app').dokku-$(cat pr_info.json | jq -r '.dokku').cs.ucsb.edu" >> "$GITHUB_OUTPUT"
           echo "OWNER=$(cat pr_info.json | jq -r '.owner')" >> "$GITHUB_OUTPUT"
           echo "REPO_NAME=$(cat pr_info.json | jq -r '.repo_name')" >> "$GITHUB_OUTPUT"
+          cd ..
 
       - name: Debugging output
         if: always()
         run: |
-          cat pr_info.json
+          cat python/pr_info.json
       
       - name: Set up SSH key
         run: |
