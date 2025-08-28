@@ -1,0 +1,47 @@
+name: 42-smoke-test.yml
+on:
+  workflow_call:
+    inputs:
+      compose-location:
+        required: true
+        type: string
+      container-name:
+        required: false
+        type: string
+        default: "javadev"
+
+permissions:
+      contents: read
+      pull-requests: read
+
+jobs:
+  smoke-test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@v1
+
+      - name: Start containers
+        env:
+          COMPOSE_FILE: ${{ inputs.compose-location }}
+        run: docker compose -f "$COMPOSE_FILE" up -d --build
+
+      - name: Run Healthcheck
+        uses: Wandalen/wretry.action@master
+        env:
+          CONTAINER_NAME: ${{ inputs.container-name }}
+        with:
+          command: "docker exec $CONTAINER_NAME curl -s --fail http://localhost:8080/"
+          attempt_limit: 3
+          attempt_delay: 15000
+
+      - name: Stop containers
+        if: always()
+        env:
+          COMPOSE_FILE: ${{ inputs.compose-location }}
+        run: docker compose -f "$COMPOSE_FILE" down
