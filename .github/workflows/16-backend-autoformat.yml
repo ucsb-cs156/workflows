@@ -7,7 +7,7 @@ on:
         type: string
         default: 'temurin'
     secrets:
-      GITHUB_TOKEN:
+      GH_TOKEN:
         required: true
 permissions:
   contents: write
@@ -41,7 +41,7 @@ jobs:
       - name: Commit changes
         uses: pirafrank/github-commit-sign@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           CHANGED_FILES: ${{ steps.format-step.outputs.files }}
         with:
           args: "commit --owner=${{ github.repository_owner }} --repo=${{ github.event.repository.name }} --branch=${{ github.ref_name }} --commitMessage='Automatic backend formatting' --changed $CHANGED_FILES"
