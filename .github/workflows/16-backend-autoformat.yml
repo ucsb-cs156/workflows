@@ -1,0 +1,47 @@
+name: 16-backend-autoformat.yml
+on:
+  workflow_call:
+    inputs:
+      JAVA_DISTRIBUTION:
+        required: false
+        type: string
+        default: 'temurin'
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java (version from .java-version file)
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ inputs.JAVA_DISTRIBUTION }}
+          java-version-file: ./.java-version
+          cache: 'maven'
+          cache-dependency-path: 'pom.xml'
+
+      - name: Check formatting with Maven
+        run: mvn -ntp git-code-format:validate-code-format
+
+      - name: "IF STEP ABOVE FAILS ^^^ you need: mvn -ntp git-code-format:format-code"
+        id: format-step
+        if: failure() # Only run if the previous step failed
+        run: |
+          mvn git-code-format:format-code
+          CHANGED_FILES=$(git diff --name-only HEAD --- src/)
+          CHANGED_FILES_STRING=$(echo "$CHANGED_FILES" | tr '\n' ' ' | sed 's/ $//')
+          echo "files=$CHANGED_FILES_STRING" >> $GITHUB_OUTPUT
+
+      - name: Commit changes
+        uses: pirafrank/github-commit-sign@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED_FILES: ${{ steps.format-step.outputs.files }}
+        with:
+          args: "commit --owner=${{ github.repository_owner }} --repo=${{ github.event.repository.name }} --branch=${{ github.ref_name }} --commitMessage='Automatic backend formatting' --changed $CHANGED_FILES"
