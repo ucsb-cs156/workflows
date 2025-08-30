@@ -6,8 +6,6 @@ on:
         required: false
         type: string
         default: 'temurin'
-permissions:
-  contents: write
 
 jobs:
   format:
@@ -54,11 +52,19 @@ jobs:
         run: |
           mvn -ntp git-code-format:validate-code-format && echo "FORMAT_REQUIRED_BACKEND=false" >> $GITHUB_OUTPUT || echo "FORMAT_REQUIRED_BACKEND=true" >> $GITHUB_OUTPUT
 
-      - name: Run Format if failed
+      - name: Run backend format if failed
         id: format-step-backend
         if: ${{steps.format-check-backend.outputs.FORMAT_REQUIRED_BACKEND == true}}
         run: |
           mvn git-code-format:format-code
+
+      - name: Run frontend format if failed
+        working-directory: ./frontend
+        id: format-step-frontend
+        if: ${{steps.format-check-frontend.outputs.FORMAT_REQUIRED_FRONTEND == true}}
+        run: |
+          npm run format
+
       - name: Find changed files
         id: get-changed-files
         if: ${{ (steps.format-check-backend.outputs.FORMAT_REQUIRED_BACKEND == true) ||  (steps.format-check-frontend.outputs.FORMAT_REQUIRED_FRONTEND == true)}}
