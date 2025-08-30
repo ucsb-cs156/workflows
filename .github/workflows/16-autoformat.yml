@@ -1,0 +1,76 @@
+name: 16-autoformat.yml
+on:
+  workflow_call:
+    inputs:
+      JAVA_DISTRIBUTION:
+        required: false
+        type: string
+        default: 'temurin'
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          # required
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
+
+      - name: Set up Java (version from .java-version file)
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ inputs.JAVA_DISTRIBUTION }}
+          java-version-file: ./.java-version
+          cache: 'maven'
+          cache-dependency-path: 'pom.xml'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: 'frontend/package.json'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: ./frontend
+
+      - name: Check frontend formatting
+        working-directory: ./frontend
+        id: format-check-frontend
+        run: |
+          npm run check-format && echo "FORMAT_REQUIRED_FRONTEND=false" >> $GITHUB_OUTPUT || echo "FORMAT_REQUIRED_FRONTEND=true" >> $GITHUB_OUTPUT
+
+      - name: Check formatting with Maven
+        id: format-check-backend
+        run: |
+          mvn -ntp git-code-format:validate-code-format && echo "FORMAT_REQUIRED_BACKEND=false" >> $GITHUB_OUTPUT || echo "FORMAT_REQUIRED_BACKEND=true" >> $GITHUB_OUTPUT
+
+      - name: Run Format if failed
+        id: format-step-backend
+        if: ${{steps.format-check-backend.outputs.FORMAT_REQUIRED_BACKEND == true}}
+        run: |
+          mvn git-code-format:format-code
+      - name: Find changed files
+        id: get-changed-files
+        if: ${{ (steps.format-check-backend.outputs.FORMAT_REQUIRED_BACKEND == true) ||  (steps.format-check-frontend.outputs.FORMAT_REQUIRED_FRONTEND == true)}}
+        run: |
+          CHANGED_FILES=$(git diff --name-only HEAD)
+          CHANGED_FILES_STRING=$(echo "$CHANGED_FILES" | tr '\n' ' ' | sed 's/ $//')
+          echo "files=$CHANGED_FILES_STRING" >> $GITHUB_OUTPUT
+
+      - name: Commit changes
+        uses: pirafrank/github-commit-sign@v0
+        if: ${{ (steps.format-check-backend.outputs.FORMAT_REQUIRED_BACKEND == true) ||  (steps.format-check-frontend.outputs.FORMAT_REQUIRED_FRONTEND == true)}}
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        with:
+          args: "commit --owner=${{ github.repository_owner }} --repo=${{ github.event.repository.name }} --branch=${{ github.head_ref }} --commitMessage='Automatic backend formatting' --changed ${{ steps.get-changed-files.outputs.files }}"
