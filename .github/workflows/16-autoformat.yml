@@ -6,6 +6,11 @@ on:
         required: false
         type: string
         default: 'temurin'
+    secrets:
+      APP_ID:
+        required: true
+      PRIVATE_KEY:
+        required: true
 
 jobs:
   format:
@@ -15,7 +20,7 @@ jobs:
         id: app-token
         with:
           # required
-          app-id: ${{ vars.APP_ID }}
+          app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
 
       - uses: actions/checkout@v4
