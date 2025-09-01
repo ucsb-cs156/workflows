@@ -2,7 +2,7 @@
 # PMD violations will appear as annotations but won't fail the workflow
 # Only fatal errors (compilation failures, action errors) will fail the workflow
 
-name: "16-backend-PMD-checks: Java Code Analysis with PMD"
+name: "17-backend-PMD-checks: Java Code Analysis with PMD"
 
 on:
   workflow_call:
