@@ -1,0 +1,76 @@
+# This workflow uses PMD GitHub Action for static code analysis with PR annotations
+# PMD violations will appear as annotations but won't fail the workflow
+# Only fatal errors (compilation failures, action errors) will fail the workflow
+
+name: "16-backend-PMD-checks: Java Code Analysis with PMD"
+
+on:
+  workflow_call:
+    secrets:
+      TEST_PROPERTIES:
+        required: false
+    inputs:
+      JAVA_DISTRIBUTION:
+        required: false
+        type: string
+        default: 'temurin'
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  pmd-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for accurate file change detection
+    
+    - name: Set up Java (version from .java-version file)
+      uses: actions/setup-java@v4
+      with:
+         distribution: ${{ inputs.JAVA_DISTRIBUTION }}
+         java-version-file: ./.java-version
+         cache: 'maven'
+         cache-dependency-path: 'pom.xml'
+
+    - name: Check for Java source files
+      id: check-java
+      run: |
+        if [ -d "src/main/java" ] && [ -n "$(find src/main/java -name '*.java' -type f)" ]; then
+          echo "java-files-exist=true" >> $GITHUB_OUTPUT
+          echo "Java source files found in src/main/java"
+        else
+          echo "java-files-exist=false" >> $GITHUB_OUTPUT
+          echo "No Java source files found in src/main/java"
+        fi
+  
+    - name: Compile Java sources
+      if: steps.check-java.outputs.java-files-exist == 'true'
+      env:
+        TEST_PROPERTIES: ${{ secrets.TEST_PROPERTIES }}
+      run: mvn -B -ntp compile
+      
+    - name: Run PMD analysis with annotations
+      if: steps.check-java.outputs.java-files-exist == 'true'
+      uses: pmd/pmd-github-action@v2
+      with:
+        rulesets: 'pmd-rules.xml'
+        sourcePath: 'src/main/java'
+        createGitHubAnnotations: true
+        uploadSarifReport: true
+        analyzeModifiedFilesOnly: false  # Analyze all files to ensure consistent behavior
+      
+    - name: Upload SARIF file for Code Scanning
+      if: steps.check-java.outputs.java-files-exist == 'true' && hashFiles('pmd-report.sarif') != ''
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: pmd-report.sarif
+
+    - name: PMD analysis skipped - no Java files
+      if: steps.check-java.outputs.java-files-exist == 'false'
+      run: echo "No Java source files found - PMD analysis skipped"
