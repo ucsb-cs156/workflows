@@ -35,6 +35,8 @@ jobs:
       with:
          distribution: ${{ inputs.JAVA_DISTRIBUTION }}
          java-version-file: ./.java-version
+         cache: 'maven'
+         cache-dependency-path: 'pom.xml'
 
     - name: Check for Java source files
       id: check-java
