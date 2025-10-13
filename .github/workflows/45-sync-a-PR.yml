@@ -27,6 +27,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT }}
           PR_URL: ${{ github.event.inputs.pr_url }}
         run: |
+          cd python
           rm -rf pr_info.json
           python <<EOF > pr_info.json
           import os
@@ -50,7 +51,7 @@ jobs:
       - name: Debugging output
         if: always()
         run: |
-          cat pr_info.json
+          cat python/pr_info.json
       
       - name: Set up SSH key
         run: |
