@@ -90,6 +90,7 @@ jobs:
           APP_URL: ${{ steps.get_pr_info.outputs.APP_URL }}
           OWNER: ${{ steps.get_pr_info.outputs.OWNER }}
           REPO_NAME: ${{ steps.get_pr_info.outputs.REPO_NAME }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         with:
           token: ${{ secrets.PAT }}
           environment: "${{env.APP}} on dokku-${{env.DOKKU}}" # Or staging, development, etc.
@@ -142,6 +143,7 @@ jobs:
           OWNER: ${{ steps.get_pr_info.outputs.OWNER }}
           REPO_NAME: ${{ steps.get_pr_info.outputs.REPO_NAME }}
           PR_URL: ${{ github.event.inputs.pr_url }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         with:
           token: ${{ secrets.PAT }}
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
@@ -161,6 +163,7 @@ jobs:
           PR_URL: ${{ github.event.inputs.pr_url }}
           OWNER: ${{ steps.get_pr_info.outputs.OWNER }}
           REPO_NAME: ${{ steps.get_pr_info.outputs.REPO_NAME }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         with:
           token: ${{ secrets.PAT }}
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
