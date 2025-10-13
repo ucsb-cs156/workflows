@@ -1,0 +1,173 @@
+name: 45-sync-a-PR
+
+# This workflow allows for manual deployment of a cs156 project repo pull request to a Dokku server.
+# It makes the assumption that the PR is from a ucsb-cs156 style project repo, and that the dokku server
+# is referenced in the PR desciption.
+
+on:
+  workflow_dispatch: # Allows manual triggering of the workflow
+    inputs:
+      pr_url:
+        type: string
+        description: URL of a cs156 project repo pull request with a dokku deployment url in the description
+   
+env:
+  GITHUB_TOKEN: ${{ secrets.PAT }} # Store your Personal Access Token in Secrets
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get values from PR URL
+        id: get_pr_info
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          PR_URL: ${{ github.event.inputs.pr_url }}
+        run: |
+          rm -rf pr_info.json
+          python <<EOF > pr_info.json
+          import os
+          import github_pr_funcs
+          GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+          pr_url = os.getenv("PR_URL")
+          if not pr_url:
+            raise ValueError("No PR URL provided. Please provide a valid PR URL.")
+          print(github_pr_funcs.get_dokku_command_elements_from_raw_pr_url(GITHUB_TOKEN, pr_url))
+          EOF
+       
+          # Parse the JSON output to extract values
+          echo "APP=$(cat pr_info.json | jq -r '.app')" >> "$GITHUB_OUTPUT"
+          echo "REPO=$(cat pr_info.json | jq -r '.repo')" >> "$GITHUB_OUTPUT"
+          echo "BRANCH=$(cat pr_info.json | jq -r '.branch')" >> "$GITHUB_OUTPUT"
+          echo "DOKKU=$(cat pr_info.json | jq -r '.dokku')" >> "$GITHUB_OUTPUT"
+          echo "APP_URL=https://$(cat pr_info.json | jq -r '.app').dokku-$(cat pr_info.json | jq -r '.dokku').cs.ucsb.edu" >> "$GITHUB_OUTPUT"
+          echo "OWNER=$(cat pr_info.json | jq -r '.owner')" >> "$GITHUB_OUTPUT"
+          echo "REPO_NAME=$(cat pr_info.json | jq -r '.repo_name')" >> "$GITHUB_OUTPUT"
+
+      - name: Debugging output
+        if: always()
+        run: |
+          cat pr_info.json
+      
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H csil.cs.ucsb.edu >> ~/.ssh/known_hosts
+        shell: bash
+
+      - name: git:sync
+        env:
+          APP: ${{ steps.get_pr_info.outputs.APP }}
+          REPO: ${{ steps.get_pr_info.outputs.REPO }}
+          BRANCH: ${{ steps.get_pr_info.outputs.BRANCH }}
+          DOKKU: ${{ steps.get_pr_info.outputs.DOKKU }}
+          APP_URL: ${{ steps.get_pr_info.outputs.APP_URL }}
+        run: |
+          echo "::notice:: Executing dokku config:set for SOURCE_REPO..."
+          ssh -i ~/.ssh/id_ed25519 pconrad@csil.cs.ucsb.edu ${{env.DOKKU}} config:set --no-restart ${{ env.APP }} SOURCE_REPO=${{ env.REPO }}
+          echo "::group:: Executing dokku git:sync"
+          ssh -i ~/.ssh/id_ed25519 pconrad@csil.cs.ucsb.edu ${{env.DOKKU}} git:sync ${{ env.APP }} ${{ env.REPO }} ${{ env.BRANCH }}
+          if [ $? -ne 0 ]; then
+            echo "::error::Dokku git sync failed. Exiting."
+            exit 1
+          fi
+          echo "::endgroup::"
+          echo "::notice::dokku git:sync succeeded"
+
+      - name: Create GitHub deployment
+        uses: chrnorm/deployment-action@v2
+        id: deployment # Assign an ID to reference outputs later
+        env:
+          APP: ${{ steps.get_pr_info.outputs.APP }}
+          REPO: ${{ steps.get_pr_info.outputs.REPO }}
+          BRANCH: ${{ steps.get_pr_info.outputs.BRANCH }}
+          DOKKU: ${{ steps.get_pr_info.outputs.DOKKU }}
+          APP_URL: ${{ steps.get_pr_info.outputs.APP_URL }}
+          OWNER: ${{ steps.get_pr_info.outputs.OWNER }}
+          REPO_NAME: ${{ steps.get_pr_info.outputs.REPO_NAME }}
+        with:
+          token: ${{ secrets.PAT }}
+          environment: "${{env.APP}} on dokku-${{env.DOKKU}}" # Or staging, development, etc.
+          description: "Deploying to ${{env.APP_URL}}"
+          # Optional: Provide a URL to your deployed application
+          environment-url: ${{env.APP_URL}}
+          owner: ${{ steps.get_pr_info.outputs.OWNER }}
+          repo: ${{ steps.get_pr_info.outputs.REPO_NAME }}
+          ref: ${{ steps.get_pr_info.outputs.BRANCH }}
+
+          
+      - name: ps:rebuild
+        env:
+          APP: ${{ steps.get_pr_info.outputs.APP }}
+          REPO: ${{ steps.get_pr_info.outputs.REPO }}
+          BRANCH: ${{ steps.get_pr_info.outputs.BRANCH }}
+          DOKKU: ${{ steps.get_pr_info.outputs.DOKKU }}
+        run: |
+          echo "::notice:: Executing dokku ps:rebuild"
+          echo "::group:: Executing dokku ps:rebuild"
+          ssh -i ~/.ssh/id_ed25519 pconrad@csil.cs.ucsb.edu ${{env.DOKKU}} ps:rebuild ${{ env.APP }} 
+          echo "::endgroup::"
+          # if [ $? -ne 0 ]; then
+          #   echo "::error::dokku ps:rebuild failed. Exiting."
+          #   exit 1
+          # fi
+          
+      - name: notify of success
+        if: success()
+        env:
+          APP: ${{ steps.get_pr_info.outputs.APP }}
+          REPO: ${{ steps.get_pr_info.outputs.REPO }}
+          BRANCH: ${{ steps.get_pr_info.outputs.BRANCH }}
+          DOKKU: ${{ steps.get_pr_info.outputs.DOKKU }}
+          APP_URL: ${{ steps.get_pr_info.outputs.APP_URL }}
+        run: |
+          echo "::notice::PR ${{ github.event.inputs.pr_url }} successfully deployed"
+          echo "::notice::Deployed to: ${{env.APP_URL}}"
+
+
+      - name: Update deployment status (Success)
+        if: success()
+        uses: chrnorm/deployment-status@v2
+        env:
+          APP: ${{ steps.get_pr_info.outputs.APP }}
+          REPO: ${{ steps.get_pr_info.outputs.REPO }}
+          BRANCH: ${{ steps.get_pr_info.outputs.BRANCH }}
+          DOKKU: ${{ steps.get_pr_info.outputs.DOKKU }}
+          APP_URL: ${{ steps.get_pr_info.outputs.APP_URL }}
+          OWNER: ${{ steps.get_pr_info.outputs.OWNER }}
+          REPO_NAME: ${{ steps.get_pr_info.outputs.REPO_NAME }}
+          PR_URL: ${{ github.event.inputs.pr_url }}
+        with:
+          token: ${{ secrets.PAT }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          environment-url: ${{ steps.deployment.outputs.environment_url }}
+          state: success
+          owner: ${{ steps.get_pr_info.outputs.OWNER }}
+          repo: ${{ steps.get_pr_info.outputs.REPO_NAME }}          
+          description: "PR ${{ env.PR_URL}} deployed to ${{env.APP_URL}}!"
+          # Optional: Link back to the deployed application
+          log-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} # Link to workflow run logs
+
+      - name: Update deployment status (Failure)
+        if: failure()
+        uses: chrnorm/deployment-status@v2
+        env:
+          APP_URL: ${{ steps.get_pr_info.outputs.APP_URL }}
+          PR_URL: ${{ github.event.inputs.pr_url }}
+          OWNER: ${{ steps.get_pr_info.outputs.OWNER }}
+          REPO_NAME: ${{ steps.get_pr_info.outputs.REPO_NAME }}
+        with:
+          token: ${{ secrets.PAT }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          owner: ${{ steps.get_pr_info.outputs.OWNER }}
+          repo: ${{ steps.get_pr_info.outputs.REPO_NAME }}          
+          state: failure
+          description: "Deployment to ${{env.APP_URL}} for PR ${{env.PR_URL}} failed!"
+          log-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} # Link to workflow run logs
+
+  
