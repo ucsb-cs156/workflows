@@ -36,8 +36,7 @@ jobs:
             # echo "statuses=$statuses"
             statuses_summarized=$(echo "$statuses" | jq '[.[] | select(.name != "enforce" and .name != "enforce / enforce")] | map({name: .name, status: .status, conclusion: .conclusion})')
             echo "statuses_summarized=$statuses_summarized"
-            state=$( echo $statuses_summarized | jq  'all(.[]; .status == "completed")')
-            echo "state=$state"
+            state=$(echo "$statuses_summarized" | jq 'all(.[]; (.status == "completed" or .status == "null"))')            echo "state=$state"
             if [[ "$state" == "true" ]]; then
               break
             fi
