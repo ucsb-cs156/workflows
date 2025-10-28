@@ -34,7 +34,7 @@ jobs:
   
     - name: Build with Maven
       run: | 
-        mvn -ntp -B spring-boot:run&
+        mvn -ntp spring-boot:run -Dspring-boot.run.arguments="--spring.jpa.hibernate.ddl-auto=validate"&
         SERVER_PROCESS_ID=$!
         while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
           if curl -sf "http://localhost:8080"; then
