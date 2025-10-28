@@ -1,0 +1,52 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: "18-validate-db-schema: Ensure Migration File Matches Entity Files"
+
+on:
+  workflow_call:
+    secrets:
+      GH_TOKEN:
+        required: true
+    inputs:
+      JAVA_DISTRIBUTION:
+        required: false
+        type: string
+        default: 'temurin'
+
+permissions:
+  contents: write
+
+jobs:
+  run-schema-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Java (version from .java-version file)
+      uses: actions/setup-java@v4
+      with:
+         distribution: ${{ inputs.JAVA_DISTRIBUTION }} 
+         java-version-file: ./.java-version
+         cache: 'maven'
+         cache-dependency-path: 'pom.xml' 
+  
+    - name: Build with Maven
+      run: | 
+        mvn -ntp spring-boot:run -Dspring-boot.run.arguments="--spring.jpa.hibernate.ddl-auto=validate"&
+        SERVER_PROCESS_ID=$!
+        ELAPSED=0
+        TIMEOUT=150
+        while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
+          if curl -sf "http://localhost:8080"; then
+            echo "server successfully reached. DB is valid."
+            kill "$SERVER_PROCESS_ID"
+            exit 0
+          fi
+          sleep 30
+          ELAPSED=$((ELAPSED + 30))
+        done
+        echo "Your database migrations do not match your entity files. Please inspect any changes made to your migration files or entities."
+        echo "The problematic changes should be listed by Spring Boot above."
+        exit 1
