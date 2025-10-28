@@ -36,6 +36,8 @@ jobs:
       run: | 
         mvn -ntp spring-boot:run -Dspring-boot.run.arguments="--spring.jpa.hibernate.ddl-auto=validate"&
         SERVER_PROCESS_ID=$!
+        ELAPSED=0
+        TIMEOUT=150
         while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
           if curl -sf "http://localhost:8080"; then
             echo "server successfully reached. DB is valid."
