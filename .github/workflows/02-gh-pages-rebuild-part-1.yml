@@ -5,6 +5,10 @@ on:
     secrets:
       GH_TOKEN:
         required: true
+    inputs:
+      JAVA_DISTRIBUTION: 
+        required: true
+        type: string
 env:
   GH_TOKEN: ${{ github.token }}
   # See: https://github.com/actions/setup-java#supported-distributions
