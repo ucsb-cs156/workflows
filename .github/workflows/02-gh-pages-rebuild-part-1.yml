@@ -32,6 +32,10 @@ on:
         required: false
         type: boolean
         default: true
+      BACKEND:
+        required: false
+        type: boolean
+        default: true
     
 env:
   GH_TOKEN: ${{ github.token }}
@@ -153,7 +157,8 @@ jobs:
   build-jacoco-main:
     name: c - Jacoco (main)
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.TIMEOUT_JACOCO}}
+    timeout-minutes: ${{ inputs.TIMEOUT_JACOCO }}
+    if: ${{ inputs.BACKEND }}
     needs: [initialize]
     env:
       destination: target/site/jacoco  
@@ -187,6 +192,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.TIMEOUT_PITEST}}
     needs: [initialize]
+    if: ${{ inputs.BACKEND }}
     env:
       destination: target/pit-reports
       history_destination: target/pit-history
@@ -347,7 +353,7 @@ jobs:
   a-build-javadoc-for-each-pr:
     name: a - Javadoc (${{ matrix.value.number }}, ${{ matrix.value.headRefName }})
     runs-on: ubuntu-latest
-    if: ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
+    if: ${{ inputs.BACKEND }} && ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
 
     needs: [initialize]
 
@@ -454,7 +460,7 @@ jobs:
   c-build-jacoco-for-each-pr:
     name: c - Jacoco (${{ matrix.value.number }}, ${{ matrix.value.headRefName }})
     runs-on: ubuntu-latest
-    if: ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
+    if: ${{ inputs.BACKEND }} && ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
     timeout-minutes: ${{ inputs.TIMEOUT_JACOCO}}
 
     needs: [initialize]
@@ -496,7 +502,7 @@ jobs:
   d-build-pitest-for-each-pr:
     name: d - Pitest (${{ matrix.value.number }}, ${{ matrix.value.headRefName }})
     runs-on: ubuntu-latest
-    if: ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
+    if: ${{ inputs.BACKEND }} && ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
     timeout-minutes: ${{ inputs.TIMEOUT_PITEST}}
 
     needs: [initialize]
