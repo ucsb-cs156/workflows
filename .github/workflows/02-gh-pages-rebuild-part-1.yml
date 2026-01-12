@@ -5,6 +5,8 @@ on:
     secrets:
       GH_TOKEN:
         required: true
+      CHROMATIC_PROJECT_TOKEN:
+        required: true
     inputs:
       JAVA_DISTRIBUTION:
         required: false
