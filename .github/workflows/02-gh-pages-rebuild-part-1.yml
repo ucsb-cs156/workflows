@@ -12,10 +12,18 @@ on:
         required: false
         type: string
         default: 'temurin'
+      TIMEOUT_JACOCO:
+        required: false
+        type: number
+        default: 10
       TIMEOUT_PITEST:
         required: false
         type: number
         default: 20
+      TIMEOUT_COVERAGE:
+        required: false
+        type: number
+        default: 10
       TIMEOUT_STRYKER:
         required: false
         type: number
@@ -140,7 +148,7 @@ jobs:
   build-jacoco-main:
     name: c - Jacoco (main)
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.JACOCO_TIMEOUT}}
+    timeout-minutes: ${{ inputs.TIMEOUT_JACOCO}}
     needs: [initialize]
     env:
       destination: target/site/jacoco  
@@ -172,7 +180,7 @@ jobs:
   build-pitest-main:
     name: d - Pitest (main)
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.PITEST_TIMEOUT}}
+    timeout-minutes: ${{ inputs.TIMEOUT_PITEST}}
     needs: [initialize]
     env:
       destination: target/pit-reports
@@ -238,7 +246,7 @@ jobs:
   build-coverage-main:
     name: e - Coverage (main)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ inputs.TIMEOUT_COVERAGE}}
     needs: [initialize]
     env:
       destination: frontend/coverage/lcov-report
@@ -271,7 +279,7 @@ jobs:
   build-stryker-main:
     name: f - Stryker (main)
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.STRYKER_TIMEOUT}}
+    timeout-minutes: ${{ inputs.TIMEOUT_STRYKER}}
     needs: [initialize]
    
     steps:
@@ -440,7 +448,7 @@ jobs:
     name: c - Jacoco (${{ matrix.value.number }}, ${{ matrix.value.headRefName }})
     runs-on: ubuntu-latest
     if: ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
-    timeout-minutes: ${{ inputs.JACOCO_TIMEOUT}}
+    timeout-minutes: ${{ inputs.TIMEOUT_JACOCO}}
 
     needs: [initialize]
 
@@ -482,7 +490,7 @@ jobs:
     name: d - Pitest (${{ matrix.value.number }}, ${{ matrix.value.headRefName }})
     runs-on: ubuntu-latest
     if: ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
-    timeout-minutes: ${{ inputs.PITEST_TIMEOUT}}
+    timeout-minutes: ${{ inputs.TIMEOUT_PITEST}}
 
     needs: [initialize]
 
@@ -567,6 +575,7 @@ jobs:
     name: e - Coverage (${{ matrix.value.number }}, ${{ matrix.value.headRefName }})
     runs-on: ubuntu-latest
     if: ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
+    timeout-minutes: ${{ inputs.TIMEOUT_COVERAGE}}
 
     needs: [initialize]
 
@@ -612,7 +621,7 @@ jobs:
 
 
   f-build-stryker-for-each-pr:
-    timeout-minutes: ${{ inputs.STRYKER_TIMEOUT}}
+    timeout-minutes: ${{ inputs.TIMEOUT_STRYKER}}
     name: f - Stryker (${{ matrix.value.number }}, ${{ matrix.value.headRefName }})
     runs-on: ubuntu-latest
     if: ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
