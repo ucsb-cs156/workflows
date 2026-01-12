@@ -1,7 +1,10 @@
 name: "02-gh-pages-rebuild-part-1" # Note: workflow name is used on workflow 04
-on:
-  workflow_dispatch:
 
+on:
+  workflow_call:
+    secrets:
+      GH_TOKEN:
+        required: true
 env:
   GH_TOKEN: ${{ github.token }}
   # See: https://github.com/actions/setup-java#supported-distributions
