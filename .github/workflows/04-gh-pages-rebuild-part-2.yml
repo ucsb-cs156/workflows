@@ -6,9 +6,10 @@ on:
       GH_TOKEN:
         required: true
     inputs:
-      JAVA_DISTRIBUTION: 
-        required: true
+      JAVA_DISTRIBUTION:
+        required: false
         type: string
+        default: 'temurin'
       
 env:
   GH_TOKEN: ${{ github.token }}
