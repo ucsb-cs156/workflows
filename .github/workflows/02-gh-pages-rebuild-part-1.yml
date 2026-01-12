@@ -12,6 +12,10 @@ on:
         required: false
         type: string
         default: 'temurin'
+      TIMEOUT_PITEST:
+        required: false
+        type: number
+        default: 10
 env:
   GH_TOKEN: ${{ github.token }}
   # See: https://github.com/actions/setup-java#supported-distributions
@@ -163,7 +167,7 @@ jobs:
   build-pitest-main:
     name: d - Pitest (main)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ inputs.PITEST_TIMEOUT}}
     needs: [initialize]
     env:
       destination: target/pit-reports
@@ -472,6 +476,7 @@ jobs:
     name: d - Pitest (${{ matrix.value.number }}, ${{ matrix.value.headRefName }})
     runs-on: ubuntu-latest
     if: ${{ needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
+    timeout-minutes: ${{ inputs.PITEST_TIMEOUT}}
 
     needs: [initialize]
 
