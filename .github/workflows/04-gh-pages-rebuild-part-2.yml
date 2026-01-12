@@ -109,6 +109,7 @@ jobs:
         fetch-depth: 1
     - name: setup - Setup Node.js
       uses: actions/setup-node@v4
+      if: ${{ inputs.FRONTEND }}
       with:
         node-version-file: 'frontend/package.json'
         cache: 'npm'
