@@ -1,11 +1,10 @@
 name: "04-gh-pages-rebuild-part-2"
-on:
-  workflow_dispatch:
-  workflow_run:
-    workflows: ["02-gh-pages-rebuild-part-1"]
-    types:
-      - completed
 
+on:
+  workflow_call:
+    secrets:
+      GH_TOKEN:
+        required: true
 env:
   GH_TOKEN: ${{ github.token }}
   javadoc_dest: target/reports/apidocs
