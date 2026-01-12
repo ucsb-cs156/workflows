@@ -10,6 +10,15 @@ on:
         required: false
         type: string
         default: 'temurin'
+      FRONTEND:
+        required: false
+        type: boolean
+        default: true
+      BACKEND:
+        required: false
+        type: boolean
+        default: true
+
       
 env:
   GH_TOKEN: ${{ github.token }}
@@ -115,21 +124,24 @@ jobs:
          echo "pull_requests=${pull_requests}" >> "$GITHUB_OUTPUT"
 
     - name: a-javadoc Make directory in case it doesn't exist
+      if: ${{ inputs.BACKEND }}
       run: mkdir -p ${{ env.javadoc_dest  }}
     - name: a-javadoc Download artifact
+      if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: javadoc
-        path: ${{env.javadoc_dest }}
+        path: ${{ env.javadoc_dest }}
         check_artifacts: true
         if_no_artifact_found: error
     - name: a-javadoc Debugging output
+      if: ${{ inputs.BACKEND }}
       run: | 
         ls -lRt
     - name: a-javadoc Deploy Javadoc (Main) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -142,8 +154,10 @@ jobs:
           target-folder: javadoc # The folder that we serve our files from
 
     - name: b-chromatic Make directory in case it doesn't exist
+      if: ${{ inputs.FRONTEND }}
       run: mkdir -p ${{ env.chromatic_dest }}
     - name: b-chromatic Download artifact
+      if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -153,7 +167,7 @@ jobs:
         check_artifacts: true
         if_no_artifact_found: error
     - name: b-chromatic Deploy chromatic (Main) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -166,8 +180,10 @@ jobs:
           target-folder: chromatic # The folder that we serve our files from
 
     - name: c-jacoco Make directory in case it doesn't exist
+      if: ${{ inputs.BACKEND }}
       run: mkdir -p ${{ env.jacoco_dest }}
     - name: c-jacoco Download artifact
+      if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -178,7 +194,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: c-jacoco Deploy Jacoco (Main) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -192,8 +208,10 @@ jobs:
 
  
     - name: d-pitest Make directory in case it doesn't exist
+      if: ${{ inputs.BACKEND }}
       run: mkdir -p ${{ env.pitest_dest }}
     - name:  d-pitest Download artifact
+      if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -203,7 +221,7 @@ jobs:
         check_artifacts: true
         if_no_artifact_found: error
     - name:  d-pitest Deploy Pitest (main) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -216,8 +234,10 @@ jobs:
           target-folder: pitest # The folder that we serve our files from
 
     - name: e-coverage Make directory in case it doesn't exist
+      if: ${{ inputs.FRONTEND }}
       run: mkdir -p ${{ env.coverage_dest }}
     - name: e-coverage Download artifact
+      if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -228,7 +248,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: e-coverage Deploy Coverage (main) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -241,8 +261,10 @@ jobs:
           target-folder: coverage # The folder that we serve our files from
 
     - name: f-stryker Make directory in case it doesn't exist
+      if: ${{ inputs.FRONTEND }}
       run: mkdir -p ${{ env.stryker_dest }}
     - name: f-stryker Download artifact
+      if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -253,7 +275,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: f-stryker Deploy Stryker (main) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -280,12 +302,15 @@ jobs:
 
     steps:
     - name: a-javadoc Checkout local code to establish repo
+      if: ${{ inputs.BACKEND }}
       uses: actions/checkout@v4
 
     - name: a-javadoc Make directory in case it doesn't exist
+      if: ${{ inputs.BACKEND }}
       run: mkdir -p ${{ env.javadoc_dest }}
 
     - name: a-javadoc Download artifact
+      if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -296,7 +321,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: a-javadoc Deploy Javadoc (PR ${{ matrix.value.number }}) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -309,9 +334,11 @@ jobs:
           target-folder: prs/${{ matrix.value.number }}/javadoc # The folder that we serve our files from
 
     - name: b-chromatic Make directory in case it doesn't exist
+      if: ${{ inputs.FRONTEND }}
       run: mkdir -p ${{ env.chromatic_dest }}
 
     - name:  b-chromatic Download artifact
+      if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -322,7 +349,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: b-chromatic Deploy chromatic (PR ${{ matrix.value.number }}) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -335,9 +362,11 @@ jobs:
           target-folder: prs/${{ matrix.value.number }}/chromatic # The folder that we serve our files from
 
     - name: c-jacoco Make directory in case it doesn't exist
+      if: ${{ inputs.BACKEND }}
       run: mkdir -p ${{ env.jacoco_dest }}
 
     - name:  c-jacoco Download artifact
+      if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -348,7 +377,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: c-jacoco Deploy Jacoco (PR ${{ matrix.value.number }}) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -361,9 +390,11 @@ jobs:
           target-folder: prs/${{ matrix.value.number }}/jacoco # The folder that we serve our files from
 
     - name: d-pitest Make directory in case it doesn't exist
+      if: ${{ inputs.BACKEND }}
       run: mkdir -p ${{ env.pitest_dest }}
 
     - name: d-pitest Download artifact
+      if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -374,7 +405,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: d-pitest Deploy Pitest (PR ${{ matrix.value.number }}) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -388,9 +419,11 @@ jobs:
         
 
     - name: e-coverage Make directory in case it doesn't exist
+      if: ${{ inputs.FRONTEND }}
       run: mkdir -p ${{ env.coverage_dest }}
 
     - name: e-coverage Download artifact
+      if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -401,7 +434,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: e-coverage Deploy Coverage (PR ${{ matrix.value.number }}) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -414,9 +447,11 @@ jobs:
           target-folder: prs/${{ matrix.value.number }}/coverage # The folder that we serve our files from
 
     - name: f-stryker Make directory in case it doesn't exist
+      if: ${{ inputs.FRONTEND }}
       run: mkdir -p ${{ env.stryker_dest }}
 
     - name: f-stryker Download artifact
+      if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
@@ -427,7 +462,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: f-stryker Deploy Stryker (PR ${{ matrix.value.number }}) 🚀
-      if: always() # always upload artifacts, even if tests fail
+      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
