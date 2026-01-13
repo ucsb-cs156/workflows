@@ -48,9 +48,59 @@ permissions:
   pull-requests: read
 
 jobs:
+  pre_initialize:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout local code to establish repo
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Create site directory and copy docs-index files
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: | 
+          echo "Running workflow from https://github.com/ucsb-cs156/workflows/01-gh-pages-pr-table.yml"
+          echo "Running in repo: ${{github.repository}}"
+
+          # Determine location of docs-index directory
+          if [ -d frontend/docs-index ]; then
+            DOCS_INDEX_DIR=frontend/docs-index
+            echo "Found docs-index directory at frontend/docs-index"
+          elif [ -d docs-index ]; then
+            DOCS_INDEX_DIR=docs-index 
+            echo "Found docs-index directory at docs-index"
+          else
+            echo "Error: docs-index directory not found." >&2
+            exit 1
+          fi
+          CONFIG_YML=${DOCS_INDEX_DIR}/_config.yml
+          OWNER_PLUS_REPOSITORY=${{github.repository}}
+          OWNER=${{ github.repository_owner }}
+          REPOSITORY=${OWNER_PLUS_REPOSITORY/$OWNER\//}
+          echo "repo: ${OWNER_PLUS_REPOSITORY}" >> ${CONFIG_YML}
+          echo "owner: ${OWNER}" >> ${CONFIG_YML}
+          echo "repo_name: ${REPOSITORY}" >> ${CONFIG_YML}    
+          echo "pull_requests: $(gh pr list -s open --json url,author,number,title,headRefName)" >> ${CONFIG_YML}
+          mkdir -p site
+          cp -r ${DOCS_INDEX_DIR}/* site
+
+    - name: Deploy 🚀
+      if: always() # always upload artifacts, even if tests fail
+      uses: Wandalen/wretry.action@master
+      with:
+        action: JamesIves/github-pages-deploy-action@v4
+        attempt_limit: 3
+        attempt_delay: 5000
+        with: |
+          folder: site # The folder the action should deploy.
+          branch: gh-pages
+          clean: true # The ONLY place that we clean things up
+    
   initialize:
     name: Build Basic Site
     runs-on: ubuntu-latest
+    needs: [ pre_initialize ]
     outputs:
       pull_requests: ${{ steps.get-prs.outputs.pull_requests }}
 
