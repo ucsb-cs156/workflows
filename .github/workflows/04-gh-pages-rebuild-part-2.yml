@@ -344,7 +344,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: prs-${{ matrix.value.number }}-chromatic
+        name: prs-${{ matrix.value.number }}-b-chromatic
         path: ${{ env.chromatic_dest }}
         check_artifacts: true
         if_no_artifact_found: error
@@ -372,7 +372,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: prs-${{ matrix.value.number }}-jacoco
+        name: prs-${{ matrix.value.number }}-c-jacoco
         path: ${{ env.jacoco_dest }}
         check_artifacts: true
         if_no_artifact_found: error
@@ -400,7 +400,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: prs-${{ matrix.value.number }}-pitest
+        name: prs-${{ matrix.value.number }}-d-pitest
         path: ${{ env.pitest_dest }}
         check_artifacts: true
         if_no_artifact_found: error
@@ -429,7 +429,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: prs-${{ matrix.value.number }}-coverage
+        name: prs-${{ matrix.value.number }}-e-coverage
         path: ${{ env.coverage_dest }}
         check_artifacts: true
         if_no_artifact_found: error
@@ -457,7 +457,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: prs-${{ matrix.value.number }}-stryker
+        name: prs-${{ matrix.value.number }}-f-stryker
         path: ${{ env.stryker_dest }}
         check_artifacts: true
         if_no_artifact_found: error
