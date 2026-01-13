@@ -101,7 +101,7 @@ jobs:
         with: |
           folder: site # The folder the action should deploy.
           branch: gh-pages
-          clean: true  # The ONLY place that we clean things up
+          clean: ${{ inputs.RESET_GH_PAGES}}  # The ONLY place that we clean things up
     
   initialize:
     name: Build Basic Site
