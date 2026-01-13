@@ -263,7 +263,7 @@ jobs:
     needs: [initialize]
     if: ${{inputs.FRONTEND}}
     env:
-      destination: frontend/coverage/lcov-report
+      destination: frontend/coverage
     steps:
     - uses: szenius/set-timezone@v2.0
       with:
@@ -595,7 +595,7 @@ jobs:
     needs: [initialize]
 
     env:
-      destination: frontend/coverage/lcov-report
+      destination: frontend/coverage
 
     strategy:
       matrix:
