@@ -64,7 +64,7 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: | 
-          echo "Running workflow from https://github.com/ucsb-cs156/workflows/01-gh-pages-pr-table.yml"
+          echo "Running workflow from https://github.com/ucsb-cs156/workflows/02-gh-pages-pr-table.yml"
           echo "Running in repo: ${{github.repository}}"
 
           # Determine location of docs-index directory
@@ -101,7 +101,7 @@ jobs:
         with: |
           folder: site # The folder the action should deploy.
           branch: gh-pages
-          clean: ${RESET}  # The ONLY place that we clean things up
+          clean: true  # The ONLY place that we clean things up
     
   initialize:
     name: Build Basic Site
