@@ -96,7 +96,7 @@ jobs:
         with: |
           folder: site # The folder the action should deploy.
           branch: gh-pages
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: true # ONLY do this on the first call 
 
   deploy-main-docs:
     name: Deploy Documentation for main branch
@@ -151,7 +151,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder: ${{ env.javadoc_dest }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: javadoc # The folder that we serve our files from
 
     - name: b-chromatic Make directory in case it doesn't exist
@@ -177,7 +177,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder:  ${{ env.chromatic_dest}} # The folder where the files come from
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: chromatic # The folder that we serve our files from
 
     - name: c-jacoco Make directory in case it doesn't exist
@@ -204,7 +204,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder: ${{ env.jacoco_dest }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: jacoco # The folder that we serve our files from
 
  
@@ -231,7 +231,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder: ${{ env.pitest_dest }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: pitest # The folder that we serve our files from
 
     - name: e-coverage Make directory in case it doesn't exist
@@ -258,7 +258,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder:  ${{ env.coverage_dest }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: coverage # The folder that we serve our files from
 
     - name: f-stryker Make directory in case it doesn't exist
@@ -285,7 +285,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder:  ${{ env.stryker_dest }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: stryker # The folder that we serve our files from
 
 
@@ -331,7 +331,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder: ${{ env.javadoc_dest  }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: prs/${{ matrix.value.number }}/javadoc # The folder that we serve our files from
 
     - name: b-chromatic Make directory in case it doesn't exist
@@ -359,7 +359,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder: ${{ env.chromatic_dest }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: prs/${{ matrix.value.number }}/chromatic # The folder that we serve our files from
 
     - name: c-jacoco Make directory in case it doesn't exist
@@ -387,7 +387,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder: ${{ env.jacoco_dest }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: prs/${{ matrix.value.number }}/jacoco # The folder that we serve our files from
 
     - name: d-pitest Make directory in case it doesn't exist
@@ -415,7 +415,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder: ${{ env.pitest_dest }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: prs/${{ matrix.value.number }}/pitest # The folder that we serve our files from
         
 
@@ -444,7 +444,7 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder: ${{ env.coverage_dest }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: prs/${{ matrix.value.number }}/coverage # The folder that we serve our files from
 
     - name: f-stryker Make directory in case it doesn't exist
@@ -472,5 +472,5 @@ jobs:
         with: |
           branch: gh-pages # The branch the action should deploy to.
           folder: ${{ env.stryker_dest }} # The folder where we put the files
-          clean: true # Automatically remove deleted files from the deploy branch
+          clean: false # Automatically remove deleted files from the deploy branch
           target-folder: prs/${{ matrix.value.number }}/stryker # The folder that we serve our files from
