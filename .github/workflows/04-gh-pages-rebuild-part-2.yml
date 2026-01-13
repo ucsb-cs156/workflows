@@ -131,7 +131,7 @@ jobs:
       if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: a-javadoc
         path: ${{ env.javadoc_dest }}
@@ -161,7 +161,7 @@ jobs:
       if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: b-chromatic
         path: ${{ env.chromatic_dest }}
@@ -187,7 +187,7 @@ jobs:
       if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: c-jacoco
         path: ${{ env.jacoco_dest }}
@@ -215,7 +215,7 @@ jobs:
       if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: d-pitest
         path: ${{ env.pitest_dest }}
@@ -241,7 +241,7 @@ jobs:
       if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: e-coverage
         path: ${{ env.coverage_dest }}
@@ -268,7 +268,7 @@ jobs:
       if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: f-stryker
         path: ${{ env.stryker_dest }}
@@ -314,7 +314,7 @@ jobs:
       if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: prs-${{ matrix.value.number }}-a-javadoc
         path: ${{ env.javadoc_dest }}
@@ -342,7 +342,7 @@ jobs:
       if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: prs-${{ matrix.value.number }}-b-chromatic
         path: ${{ env.chromatic_dest }}
@@ -370,7 +370,7 @@ jobs:
       if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: prs-${{ matrix.value.number }}-c-jacoco
         path: ${{ env.jacoco_dest }}
@@ -398,7 +398,7 @@ jobs:
       if: ${{ inputs.BACKEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: prs-${{ matrix.value.number }}-d-pitest
         path: ${{ env.pitest_dest }}
@@ -427,7 +427,7 @@ jobs:
       if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: prs-${{ matrix.value.number }}-e-coverage
         path: ${{ env.coverage_dest }}
@@ -455,7 +455,7 @@ jobs:
       if: ${{ inputs.FRONTEND }}
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         name: prs-${{ matrix.value.number }}-f-stryker
         path: ${{ env.stryker_dest }}
