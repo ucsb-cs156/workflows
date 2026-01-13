@@ -163,7 +163,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: chromatic
+        name: b-chromatic
         path: ${{ env.chromatic_dest }}
         check_artifacts: true
         if_no_artifact_found: error
@@ -189,7 +189,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: jacoco
+        name: c-jacoco
         path: ${{ env.jacoco_dest }}
         check_artifacts: true
         if_no_artifact_found: error
@@ -217,7 +217,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: pitest
+        name: d-pitest
         path: ${{ env.pitest_dest }}
         check_artifacts: true
         if_no_artifact_found: error
@@ -243,7 +243,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: coverage
+        name: e-coverage
         path: ${{ env.coverage_dest }}
         check_artifacts: true
         if_no_artifact_found: error
@@ -270,7 +270,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: stryker
+        name: f-stryker
         path: ${{ env.stryker_dest }}
         check_artifacts: true
         if_no_artifact_found: error
