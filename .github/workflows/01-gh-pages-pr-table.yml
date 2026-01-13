@@ -68,4 +68,4 @@ jobs:
         with: |
           folder: site # The folder the action should deploy.
           branch: gh-pages
-          clean: false # Automatically remove deleted files from the deploy branch
+          clean: true # Automatically remove deleted files from the deploy branch
