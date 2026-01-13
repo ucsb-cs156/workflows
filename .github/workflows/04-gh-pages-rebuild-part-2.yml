@@ -133,7 +133,7 @@ jobs:
       with:
         workflow: 02-gh-pages-rebuild-part-1.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
-        name: javadoc
+        name: a-javadoc
         path: ${{ env.javadoc_dest }}
         check_artifacts: true
         if_no_artifact_found: error
