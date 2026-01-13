@@ -96,7 +96,7 @@ jobs:
         with: |
           folder: site # The folder the action should deploy.
           branch: gh-pages
-          clean: true # ONLY do this on the first call 
+          clean: false # ONLY do this in workflow 01
 
   deploy-main-docs:
     name: Deploy Documentation for main branch
