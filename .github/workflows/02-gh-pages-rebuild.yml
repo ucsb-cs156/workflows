@@ -93,7 +93,7 @@ jobs:
       if: always() # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       env:
-        RESET: ${{ inputs.RESET }}
+        RESET: ${{ inputs.RESET_GH_PAGES }}
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
