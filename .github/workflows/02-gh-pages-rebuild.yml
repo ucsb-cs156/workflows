@@ -1,5 +1,4 @@
-name: "02-gh-pages-rebuild-part-1" # Note: workflow name is used on workflow 04
-
+name: "02-gh-pages-rebuild" 
 on:
   workflow_call:
     secrets:
@@ -217,7 +216,7 @@ jobs:
       id: download-artifact
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         branch: ${{ env.branch_name }}
         name: pitest-main-history.bin
@@ -321,7 +320,7 @@ jobs:
       id: download-artifact
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         branch: main
         name: stryker-incremental-main.json
@@ -547,7 +546,7 @@ jobs:
       id: download-artifact
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         branch: ${{ env.branch_name }}
         name: pitest-${{ matrix.value.number }}-history.bin
@@ -679,7 +678,7 @@ jobs:
       id: download-artifact
       uses: dawidd6/action-download-artifact@v6
       with:
-        workflow: 02-gh-pages-rebuild-part-1.yml
+        workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         branch: main
         name: stryker-incremental-${{ matrix.value.number }}.json
