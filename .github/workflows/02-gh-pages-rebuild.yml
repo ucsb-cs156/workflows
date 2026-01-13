@@ -201,7 +201,7 @@ jobs:
     - name: Upload to artifacts
       uses: actions/upload-artifact@v4
       with:
-          name: chromatic
+          name: b-chromatic
           path: ${{ env.destination }}
           overwrite: true
   
@@ -233,7 +233,7 @@ jobs:
     - name: Upload to artifacts
       uses: actions/upload-artifact@v4
       with:
-          name: jacoco
+          name: c-jacoco
           path: ${{ env.destination }}
           overwrite: true
 
@@ -292,7 +292,7 @@ jobs:
       if: always() # always upload artifacts, even if tests fail
       uses: actions/upload-artifact@v4
       with:
-        name: pitest-main-history.bin
+        name: d-pitest-main-history.bin
         path: ${{ env.history_destination}}/history.bin
         overwrite: true
 
@@ -300,7 +300,7 @@ jobs:
     - name: Upload to artifacts
       uses: actions/upload-artifact@v4
       with:
-          name: pitest
+          name: d-pitest
           path: ${{ env.destination }}
           overwrite: true
 
@@ -335,7 +335,7 @@ jobs:
       if: always() # always upload artifacts, even if tests fail
       uses: actions/upload-artifact@v4
       with:
-        name: coverage
+        name: e-coverage
         path: ${{ env.destination }}
         overwrite: true
 
@@ -387,7 +387,7 @@ jobs:
     - name: Upload stryker incremental file to Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: stryker-incremental-main.json
+        name: f-stryker-incremental-main.json
         path: frontend/history
         overwrite: true
 
@@ -396,7 +396,7 @@ jobs:
       if: always() # always upload artifacts, even if tests fail
       uses: actions/upload-artifact@v4
       with:
-        name: stryker
+        name: f-stryker
         path: frontend/reports/mutation/mutation.html
         overwrite: true
 
