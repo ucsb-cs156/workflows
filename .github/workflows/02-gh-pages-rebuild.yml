@@ -269,7 +269,7 @@ jobs:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         branch: ${{ env.branch_name }}
-        name: pitest-main-history.bin
+        name: d-pitest-main-history.bin
         path: ${{ env.history_destination}}
         check_artifacts: true
         if_no_artifact_found: warn
@@ -373,7 +373,7 @@ jobs:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
         branch: main
-        name: stryker-incremental-main.json
+        name: f-stryker-incremental-main.json
         path:  frontend/history
         check_artifacts: true
         if_no_artifact_found: warn
