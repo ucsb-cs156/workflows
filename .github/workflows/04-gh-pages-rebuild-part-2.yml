@@ -142,7 +142,7 @@ jobs:
       run: | 
         ls -lRt
     - name: a-javadoc Deploy Javadoc (Main) 🚀
-      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -168,7 +168,7 @@ jobs:
         check_artifacts: true
         if_no_artifact_found: error
     - name: b-chromatic Deploy chromatic (Main) 🚀
-      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -195,7 +195,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: c-jacoco Deploy Jacoco (Main) 🚀
-      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -222,7 +222,7 @@ jobs:
         check_artifacts: true
         if_no_artifact_found: error
     - name:  d-pitest Deploy Pitest (main) 🚀
-      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -249,7 +249,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: e-coverage Deploy Coverage (main) 🚀
-      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -276,7 +276,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: f-stryker Deploy Stryker (main) 🚀
-      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -322,7 +322,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: a-javadoc Deploy Javadoc (PR ${{ matrix.value.number }}) 🚀
-      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -350,7 +350,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: b-chromatic Deploy chromatic (PR ${{ matrix.value.number }}) 🚀
-      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -378,7 +378,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: c-jacoco Deploy Jacoco (PR ${{ matrix.value.number }}) 🚀
-      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -406,7 +406,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: d-pitest Deploy Pitest (PR ${{ matrix.value.number }}) 🚀
-      if: always() && ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -435,7 +435,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: e-coverage Deploy Coverage (PR ${{ matrix.value.number }}) 🚀
-      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
@@ -463,7 +463,7 @@ jobs:
         if_no_artifact_found: error
 
     - name: f-stryker Deploy Stryker (PR ${{ matrix.value.number }}) 🚀
-      if: always() && ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
+      if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
       uses: Wandalen/wretry.action@master
       with:
         action: JamesIves/github-pages-deploy-action@v4
