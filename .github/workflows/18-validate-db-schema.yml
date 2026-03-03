@@ -13,6 +13,10 @@ on:
         required: false
         type: string
         default: 'temurin'
+      WEBHOOK_SECRET:
+        required: false
+        type: string
+        default : ''
 
 permissions:
   contents: write
@@ -33,6 +37,8 @@ jobs:
          cache-dependency-path: 'pom.xml' 
   
     - name: Build with Maven
+      env:
+        WEBHOOK_SECRET: ${{ inputs.WEBHOOK_SECRET }}
       run: | 
         mvn -ntp spring-boot:run -Dspring-boot.run.arguments="--spring.jpa.hibernate.ddl-auto=validate"&
         SERVER_PROCESS_ID=$!
