@@ -16,7 +16,7 @@ on:
       WEBHOOK_SECRET:
         required: false
         type: string
-        default : ''
+        default: ''
 
 permissions:
   contents: write
