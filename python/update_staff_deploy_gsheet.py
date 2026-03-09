@@ -5,7 +5,7 @@ import json
 import github_pr_funcs
 
 
-def update(app: str, pr_url: str, token: str):
+def update(app: str, pr_url: str):
     service_account = json.loads(os.getenv('GOOGLE_SERVICE_ACCOUNT'))
     auth = gspread.service_account_from_dict(service_account)
     sheet = auth.open_by_key("1-IQJ0kTyenqZFeS1qeUZvD6oKls2WnlYwSts9IwwtHQ")
@@ -17,15 +17,14 @@ def update(app: str, pr_url: str, token: str):
     if correct_row is None:
         raise ValueError(f"App '{app}' not found in the sheet")
 
-    pr_id = github_pr_funcs.get_pr_from_raw_pr_url(token, pr_url)
+    pr_id = github_pr_funcs.separate_raw_pr_url(pr_url)
 
-    sheet.sheet1.update_cell(correct_row.row, correct_col.col, pr_id)
+    sheet.sheet1.update_cell(correct_row.row, correct_col.col, int(pr_id['pr_number']))
 
 
 parser = argparse.ArgumentParser(description='Update staff deployment Google Sheet')
 parser.add_argument('--app', type=str, help='Dokku app name', required=True)
 parser.add_argument('--pr_url', type=str, help='Pull request url', required=True)
-parser.add_argument('--token', type=str, help='GitHub Token', required=True)
 args = parser.parse_args()
 if __name__ == "__main__":
-    update(args.app, args.pr_url, args.token)
+    update(args.app, args.pr_url)
