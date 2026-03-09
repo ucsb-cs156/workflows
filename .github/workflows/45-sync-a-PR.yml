@@ -164,7 +164,7 @@ jobs:
           PR_URL: ${{ github.event.inputs.pr_url }}
           GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
         run: |
-          pip3 install -r python/update_staff_deploy_ghsheet-requirements.txt
+          python -m pip install -r python/update_staff_deploy_gsheet-requirements.txt
           python python/update_staff_deploy_gsheet.py --app ${{ env.APP }} --pr_url ${{ env.PR_URL }} --token ${{ env.GITHUB_TOKEN }}
 
       - name: Update deployment status (Failure)
