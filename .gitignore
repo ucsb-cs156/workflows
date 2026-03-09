@@ -1,1 +1,3 @@
 .DS_Store
+python/credentials.json
+*.idea/

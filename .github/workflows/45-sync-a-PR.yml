@@ -156,6 +156,17 @@ jobs:
           # Optional: Link back to the deployed application
           log-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} # Link to workflow run logs
 
+      - name: Update Deployment Spreadsheet
+        if: success()
+        env:
+          APP: ${{ steps.get_pr_info.outputs.APP }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          PR_URL: ${{ github.event.inputs.pr_url }}
+          GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
+        run: |
+          pip3 install -r python/update_staff_deploy_ghsheet-requirements.txt
+          python python/update_staff_deploy_gsheet.py --app ${{ env.APP }} --pr_url ${{ env.PR_URL }} --token ${{ env.GITHUB_TOKEN }}
+
       - name: Update deployment status (Failure)
         if: failure()
         uses: chrnorm/deployment-status@v2
