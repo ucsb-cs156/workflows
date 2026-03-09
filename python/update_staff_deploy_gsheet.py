@@ -17,7 +17,7 @@ def update(app: str, pr_url: str, token: str):
     if correct_row is None:
         raise ValueError(f"App '{app}' not found in the sheet")
 
-    pr_id = get_pr_from_raw_pr_url(token, pr_url)
+    pr_id = github_pr_funcs.get_pr_from_raw_pr_url(token, pr_url)
 
     sheet.sheet1.update_cell(correct_row.row, correct_col.col, pr_id)
 
