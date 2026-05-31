@@ -1,5 +1,13 @@
 # This workflow will build a Java project with Maven
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# Example invocation with a custom timeout:
+# jobs:
+#   validate-db-schema:
+#     uses: ucsb-cs156/workflows/.github/workflows/18-validate-db-schema.yml@main
+#     secrets:
+#       GH_TOKEN: ${{ secrets.GH_TOKEN }}
+#     with:
+#       TIMEOUT: 10
 
 name: "18-validate-db-schema: Ensure Migration File Matches Entity Files"
 
@@ -13,6 +21,10 @@ on:
         required: false
         type: string
         default: 'temurin'
+      TIMEOUT:
+        required: false
+        type: number
+        default: 10
 
 permissions:
   contents: write
@@ -20,7 +32,7 @@ permissions:
 jobs:
   run-schema-validation:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ inputs.TIMEOUT }}
 
     steps:
     - uses: actions/checkout@v4

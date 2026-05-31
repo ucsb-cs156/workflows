@@ -1,6 +1,12 @@
 # This workflow uses PMD GitHub Action for static code analysis with PR annotations
 # PMD violations will appear as annotations but won't fail the workflow
 # Only fatal errors (compilation failures, action errors) will fail the workflow
+# Example invocation with a custom timeout:
+# jobs:
+#   backend-pmd:
+#     uses: ucsb-cs156/workflows/.github/workflows/17-backend-PMD-checks.yml@main
+#     with:
+#       TIMEOUT: 10
 
 name: "17-backend-PMD-checks: Java Code Analysis with PMD"
 
@@ -14,6 +20,10 @@ on:
         required: false
         type: string
         default: 'temurin'
+      TIMEOUT:
+        required: false
+        type: number
+        default: 10
 
 permissions:
   contents: read
@@ -23,7 +33,7 @@ permissions:
 jobs:
   pmd-analysis:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ inputs.TIMEOUT }}
     
     steps:
     - uses: actions/checkout@v4

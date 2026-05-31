@@ -1,3 +1,11 @@
+# Example invocation with a custom timeout:
+# jobs:
+#   smoke-test:
+#     uses: ucsb-cs156/workflows/.github/workflows/42-smoke-test.yml@main
+#     with:
+#       compose-location: .devcontainer/docker-compose.yml
+#       TIMEOUT: 20
+
 name: 42-smoke-test.yml
 on:
   workflow_call:
@@ -9,6 +17,10 @@ on:
         required: false
         type: string
         default: "javadev"
+      TIMEOUT:
+        required: false
+        type: number
+        default: 20
 
 permissions:
       contents: read
@@ -16,7 +28,7 @@ permissions:
 
 jobs:
   smoke-test:
-    timeout-minutes: 20
+    timeout-minutes: ${{ inputs.TIMEOUT }}
     runs-on: ubuntu-latest
 
     steps:

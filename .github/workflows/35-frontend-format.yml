@@ -1,12 +1,24 @@
+# Example invocation with a custom timeout:
+# jobs:
+#   frontend-format:
+#     uses: ucsb-cs156/workflows/.github/workflows/35-frontend-format.yml@main
+#     with:
+#       TIMEOUT: 10
+
 name: "35-frontend-format: JavaScript format checking"
 
 on:
   workflow_call:
+    inputs:
+      TIMEOUT:
+        required: false
+        type: number
+        default: 10
 
 jobs:
   check-format:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ inputs.TIMEOUT }}
 
     steps:
       - uses: actions/checkout@v4

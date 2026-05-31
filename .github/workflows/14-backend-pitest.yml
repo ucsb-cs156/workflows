@@ -1,5 +1,13 @@
 # This workflow will build a Java project with Maven
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# Example invocation with a custom timeout:
+# jobs:
+#   backend-pitest:
+#     uses: ucsb-cs156/workflows/.github/workflows/14-backend-pitest.yml@main
+#     secrets:
+#       GH_TOKEN: ${{ secrets.GH_TOKEN }}
+#     with:
+#       TIMEOUT: 20
 
 name: "14-backend-pitest: Java Mutation Testing (Pitest)"
 
@@ -13,6 +21,10 @@ on:
         required: false
         type: string
         default: 'temurin'
+      TIMEOUT:
+        required: false
+        type: number
+        default: 20
 
 permissions:
   contents: write
@@ -23,7 +35,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: ${{ inputs.TIMEOUT }}
 
     steps:
     - uses: actions/checkout@v4
