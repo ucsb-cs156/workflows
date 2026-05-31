@@ -1,5 +1,13 @@
 # Running this script will run a full mutation coverage report
 # (not incremental) on the main branch.
+# Example invocation with a custom timeout:
+# jobs:
+#   stryker:
+#     uses: ucsb-cs156/workflows/.github/workflows/34-frontend-main-mutation-testing.yml@main
+#     secrets:
+#       GH_TOKEN: ${{ secrets.GH_TOKEN }}
+#     with:
+#       TIMEOUT: 120
 
 name: "34-frontend-main-testing: Stryker JS Mutation Testing (JavaScript/Jest)"
 
@@ -8,11 +16,16 @@ on:
     secrets:
       GH_TOKEN:
         required: true
+    inputs:
+      TIMEOUT:
+        required: false
+        type: number
+        default: 90
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: ${{ inputs.TIMEOUT }}
 
     steps:
       - uses: szenius/set-timezone@v2.0
