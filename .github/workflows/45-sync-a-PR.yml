@@ -10,6 +10,10 @@ on:
       pr_url:
         type: string
         description: URL of a cs156 project repo pull request with a dokku deployment url in the description
+      update_spreadsheet:
+        type: boolean
+        description: Whether to update the deployment spreadsheet
+        default: false
    
 env:
   GITHUB_TOKEN: ${{ secrets.PAT }} # Store your Personal Access Token in Secrets
@@ -155,6 +159,17 @@ jobs:
           description: "PR ${{ env.PR_URL}} deployed to ${{env.APP_URL}}!"
           # Optional: Link back to the deployed application
           log-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} # Link to workflow run logs
+
+      - name: Update Deployment Spreadsheet
+        if: success() && inputs.update_spreadsheet
+        env:
+          APP: ${{ steps.get_pr_info.outputs.APP }}
+          PR_URL: ${{ github.event.inputs.pr_url }}
+          GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
+        run: |
+          cd python
+          python -m pip install -r update_staff_deploy_gsheet-requirements.txt
+          python update_staff_deploy_gsheet.py --app ${{ env.APP }} --pr_url ${{ env.PR_URL }}
 
       - name: Update deployment status (Failure)
         if: failure()
