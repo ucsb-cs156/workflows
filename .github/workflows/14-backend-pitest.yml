@@ -13,6 +13,12 @@ on:
         required: false
         type: string
         default: 'temurin'
+         inputs:
+      TIMEOUT:
+        required: false
+        type: number
+        default: 20
+
 
 permissions:
   contents: write
@@ -23,7 +29,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: ${inputs.TIMEOUT}
 
     steps:
     - uses: actions/checkout@v4
