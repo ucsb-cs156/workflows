@@ -1,3 +1,12 @@
+# Example invocation with a custom timeout:
+# jobs:
+#   frontend-pr-mutation:
+#     uses: ucsb-cs156/workflows/.github/workflows/33-frontend-pr-mutation-testing.yml@main
+#     secrets:
+#       GH_TOKEN: ${{ secrets.GH_TOKEN }}
+#     with:
+#       TIMEOUT: 120
+
 name: "33-frontend-pr-mutation-testing: Stryker JS Mutation Testing (JavaScript/Jest)"
 
 # This workflow pulls incremental mutation testing results
@@ -10,11 +19,16 @@ on:
     secrets:
       GH_TOKEN:
         required: true
+    inputs:
+      TIMEOUT:
+        required: false
+        type: number
+        default: 120
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: ${{ inputs.TIMEOUT }}
     env:
       destination: frontend/reports/mutation
 

@@ -1,12 +1,24 @@
+# Example invocation with a custom timeout:
+# jobs:
+#   frontend-eslint:
+#     uses: ucsb-cs156/workflows/.github/workflows/36-frontend-eslint.yml@main
+#     with:
+#       TIMEOUT: 10
+
 name: "36-frontend-eslint: JavaScript style checking"
 
 on:
   workflow_call:
+    inputs:
+      TIMEOUT:
+        required: false
+        type: number
+        default: 10
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ inputs.TIMEOUT }}
 
     steps:
       - uses: szenius/set-timezone@v2.0

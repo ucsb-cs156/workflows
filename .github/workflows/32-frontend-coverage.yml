@@ -1,3 +1,12 @@
+# Example invocation with a custom timeout:
+# jobs:
+#   frontend-coverage:
+#     uses: ucsb-cs156/workflows/.github/workflows/32-frontend-coverage.yml@main
+#     secrets:
+#       GH_TOKEN: ${{ secrets.GH_TOKEN }}
+#     with:
+#       TIMEOUT: 10
+
 name: "32-frontend-coverage: Frontend Coverage (vite/vitest)"
 
 on:
@@ -5,11 +14,16 @@ on:
     secrets:
       GH_TOKEN:
         required: true
+    inputs:
+      TIMEOUT:
+        required: false
+        type: number
+        default: 10
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: ${{ inputs.TIMEOUT }}
 
     steps:
       - uses: szenius/set-timezone@v2.0
