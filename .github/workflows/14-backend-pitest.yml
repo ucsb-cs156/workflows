@@ -13,7 +13,6 @@ on:
         required: false
         type: string
         default: 'temurin'
-         inputs:
       TIMEOUT:
         required: false
         type: number
@@ -29,7 +28,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: ${inputs.TIMEOUT}
+    timeout-minutes: ${{ inputs.TIMEOUT }}
 
     steps:
     - uses: actions/checkout@v4
