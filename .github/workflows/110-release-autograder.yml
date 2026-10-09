@@ -1,0 +1,147 @@
+# 110-release-autograder: build the Gradescope Autograder.zip of a ucsb-cs156 autograder
+# repository and attach it to the GitHub release for the pushed tag.
+#
+# The zip is named <ASSIGNMENT>-Autograder-<tag>.zip (e.g. jpa02-Autograder-v1.2.1-f26.zip) and is
+# built with autograder/tools/make_autograder.py, so it always contains setup.sh, run_autograder
+# and the whole autograder/tools directory, plus the autograder directories listed in AUTOGRADERS.
+#
+# The job runs only for a tag whose commit is the tip of main (a tag push sets github.event.base_ref
+# to that branch). It also runs when started by hand from the Actions tab with a *tag* selected
+# under "Use workflow from"; on a branch it is skipped, so that no release named after a branch
+# is ever created.
+#
+# Example invocation (.github/workflows/github-release.yaml in an autograder repo):
+#
+# name: "Compile and Create new release on Github"
+# on:
+#   workflow_dispatch:
+#   push:
+#     tags:
+#       - v*
+# permissions:
+#   contents: write
+# jobs:
+#   release:
+#     uses: ucsb-cs156/workflows/.github/workflows/110-release-autograder.yml@main
+#     with:
+#       AUTOGRADERS: student_information test_student_deployment test_student_readme test_student_github
+#       FRONTIERS: true
+#     secrets: inherit
+#
+# With FRONTIERS: true the workflow writes the course-scoped Frontiers API key and course settings
+# into autograder/tools before zipping, from the organization secret FRONTIERS_API_KEY and the
+# organization variables FRONTIERS_COURSE_ID and FRONTIERS_URL (optional). `secrets: inherit`
+# passes the secret through; the variables are read from the calling repository's vars context.
+
+name: "110-release-autograder: Build Autograder.zip and attach it to the release"
+
+on:
+  workflow_call:
+    inputs:
+      AUTOGRADERS:
+        description: "Space-separated names of the directories under autograder/ to include in the zip (tools, setup.sh and run_autograder are always included)"
+        required: true
+        type: string
+      ASSIGNMENT:
+        description: "Assignment name used in the zip file name <ASSIGNMENT>-Autograder-<tag>.zip. Defaults to the repository name without its -autograder suffix (jpa02-autograder -> jpa02)"
+        required: false
+        type: string
+        default: ""
+      FRONTIERS:
+        description: "Write the Frontiers API key (secret FRONTIERS_API_KEY) and course settings (variables FRONTIERS_COURSE_ID and FRONTIERS_URL) into autograder/tools before zipping"
+        required: false
+        type: boolean
+        default: false
+      PYTHON_VERSION:
+        required: false
+        type: string
+        default: "3.13"
+      TIMEOUT:
+        required: false
+        type: number
+        default: 10
+    secrets:
+      FRONTIERS_API_KEY:
+        description: "Course-scoped Frontiers API key; required when FRONTIERS is true"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  upload-release:
+    name: Build and Upload Release
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.TIMEOUT }}
+    if: startsWith(github.ref, 'refs/tags/') && (github.event_name == 'workflow_dispatch' || contains(github.event.base_ref, 'main'))
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ inputs.PYTHON_VERSION }}
+
+      - name: Set zip file name
+        env:
+          ASSIGNMENT: ${{ inputs.ASSIGNMENT }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ASSIGNMENT="${ASSIGNMENT:-${REPO_NAME%-autograder}}"
+          echo "ZIP_NAME=${ASSIGNMENT}-Autograder-${TAG}.zip" >> "$GITHUB_ENV"
+          echo "Building ${ASSIGNMENT}-Autograder-${TAG}.zip"
+
+      # The autograder looks students up on Frontiers with a course-scoped API key. The key is an
+      # organization secret and the course id/URL are organization variables, so that one key can
+      # serve every autograder of the quarter. See the calling repository's README.
+      - name: Add the Frontiers API key and course settings
+        if: ${{ inputs.FRONTIERS }}
+        env:
+          FRONTIERS_API_KEY: ${{ secrets.FRONTIERS_API_KEY }}
+          FRONTIERS_URL: ${{ vars.FRONTIERS_URL }}
+          FRONTIERS_COURSE_ID: ${{ vars.FRONTIERS_COURSE_ID }}
+        run: |
+          if [ -z "$FRONTIERS_API_KEY" ]; then
+            echo "::error::The FRONTIERS_API_KEY secret is not set. Create a key on the course's API Keys tab in Frontiers and store it as an organization secret shared with this repository (see the README, Quarterly Required Updates). If the calling workflow does not use 'secrets: inherit', pass the secret explicitly."
+            exit 1
+          fi
+          if [ -z "$FRONTIERS_COURSE_ID" ]; then
+            echo "::error::The FRONTIERS_COURSE_ID variable is not set. Set it (organization variable) to the Frontiers course id the key belongs to (see the README, Quarterly Required Updates)."
+            exit 1
+          fi
+          printf '%s\n' "$FRONTIERS_API_KEY" > autograder/tools/frontiers_api_key
+          printf 'FRONTIERS_URL=%s\nFRONTIERS_COURSE_ID=%s\n' "${FRONTIERS_URL:-https://frontiers.dokku-00.cs.ucsb.edu}" "$FRONTIERS_COURSE_ID" > autograder/tools/frontiers.env
+          echo "Added key ending in ...${FRONTIERS_API_KEY: -4} for course $FRONTIERS_COURSE_ID at ${FRONTIERS_URL:-https://frontiers.dokku-00.cs.ucsb.edu}"
+
+      - name: Make the Autograder.zip
+        env:
+          AUTOGRADERS: ${{ inputs.AUTOGRADERS }}
+        run: |
+          cd autograder
+          args=()
+          for dir in $AUTOGRADERS; do
+            dir="${dir%/}"
+            if [ ! -d "$dir" ]; then
+              echo "::error::AUTOGRADERS names '$dir', but autograder/$dir is not a directory."
+              exit 1
+            fi
+            args+=(-a "$dir")
+          done
+          python3 tools/make_autograder.py "${args[@]}" \
+                  -s setup.sh \
+                  -r run_autograder \
+                  -o "../${ZIP_NAME}"
+          cd ..
+          echo "Contents of ${ZIP_NAME}:"
+          unzip -l "${ZIP_NAME}"
+
+      - name: Upload to Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ env.ZIP_NAME }}
+          tag: ${{ github.ref }}
+          overwrite: true
