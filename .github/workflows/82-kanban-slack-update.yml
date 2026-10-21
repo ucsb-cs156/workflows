@@ -398,6 +398,20 @@ jobs:
               unassigned_row += f" {count:>{width}} |"
           table += unassigned_row + "\n"
 
+          # Add a double rule and a TOTAL row (assigned + unassigned, per column)
+          double_rule = "|==================|"
+          for width in widths:
+              double_rule += "=" * (width + 2) + "|"
+          table += double_rule + "\n"
+
+          total_row = f"| {'TOTAL':<17}|"
+          for column, width in zip(columns, widths):
+              total = unassigned_counts.get(column, 0) + sum(
+                  counts.get(column, 0) for counts in assignees.values()
+              )
+              total_row += f" {total:>{width}} |"
+          table += total_row + "\n"
+
           print(f"ASCII Table:\n{table}")
           with open('ascii_table.txt', 'w') as f:
               f.write(table)
