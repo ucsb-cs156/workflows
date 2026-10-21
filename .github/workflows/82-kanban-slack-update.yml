@@ -22,9 +22,8 @@
 #       SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
 #
 # The team name is taken from the last 6 characters of the repository name
-# (e.g. "f26-01" for team01-f26-01), and the Slack channel is the public channel
-# with that name.  The channel lookup uses the prefix QXX (e.g. "f26"), which
-# defaults to the first 3 characters of the team name.
+# (e.g. "f26-01" for team01-f26-01).  The report is posted to the Slack channel
+# named SLACK_CHANNEL_PREFIX + team name, e.g. "team-f26-01".
 
 name: "82-kanban-slack-update: Post Kanban status to Slack"
 
@@ -44,11 +43,11 @@ on:
         required: false
         type: string
         default: "Todo, In Progress, In Review, Done"
-      QXX:
-        description: "Slack channel name prefix, e.g. f26. Defaults to the first 3 characters of the team name."
+      SLACK_CHANNEL_PREFIX:
+        description: "Prefix added to the team name to get the Slack channel name, e.g. team- for team-f26-01"
         required: false
         type: string
-        default: ""
+        default: "team-"
     secrets:
       PAT:
         description: "Classic personal access token with read access to the org's GitHub Projects"
@@ -115,9 +114,9 @@ jobs:
           fi
 
   # This job extracts the team name from the repository name
-  # The team name is used to find the Slack channel for the team
   # It does this by extracting the last 6 characters of the repository name
-  # Then sets the team name as an output for the next job
+  # (e.g. "f26-01" for team01-f26-01).  The Slack channel name is
+  # SLACK_CHANNEL_PREFIX + team name (e.g. "team-f26-01").
   get_team_name:
     name: Get Team Name and Repository Name
     runs-on: ubuntu-latest
@@ -126,12 +125,12 @@ jobs:
     outputs:
       team: ${{ steps.find_team.outputs.team }}
       repository: ${{ steps.find_team.outputs.repository }}
-      qxx: ${{ steps.find_team.outputs.qxx }}
+      slack_channel_name: ${{ steps.find_team.outputs.slack_channel_name }}
     steps:
       - name: Extract Team Name from Repo
         id: find_team
         env:
-          QXX_INPUT: ${{ inputs.QXX }}
+          SLACK_CHANNEL_PREFIX: ${{ inputs.SLACK_CHANNEL_PREFIX }}
         run: |
           REPO=${{ github.repository }}
           TEAM_NAME="${REPO: -6}"
@@ -140,11 +139,11 @@ jobs:
           OWNER=${{ github.repository_owner }}
           REPOSITORY=${OWNER_PLUS_REPOSITORY/$OWNER\//}
 
-          QXX="${QXX_INPUT:-${TEAM_NAME:0:3}}"
-
-          echo "repository=${REPOSITORY}" >> "$GITHUB_OUTPUT"
-          echo "team=${TEAM_NAME}" >> "$GITHUB_OUTPUT"
-          echo "qxx=${QXX}" >> "$GITHUB_OUTPUT"
+          {
+            echo "repository=${REPOSITORY}"
+            echo "team=${TEAM_NAME}"
+            echo "slack_channel_name=${SLACK_CHANNEL_PREFIX}${TEAM_NAME}"
+          } >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT"
 
   # This job finds the project ID for the team based on the repository name,
@@ -350,97 +349,89 @@ jobs:
           path: ascii_table.txt
           overwrite: true
 
-  # This job looks up the public Slack channels whose names start with the
-  # quarter prefix (e.g. "f26") and produces a JSON mapping from channel name
-  # to channel id, e.g. {"f26-01":"C0123...", "f26-02":"C0456...", ...}
-  compute_team_to_channel:
-    name: Compute Team to Channel Mapping
+  # This job looks up the id of the Slack channel named after the team
+  # (e.g. "team-f26-01") and fails with a clear message if it does not exist.
+  find_slack_channel:
+    name: Find Slack Channel for Team
     runs-on: ubuntu-latest
     needs: [check_date, get_team_name]
     if: needs.check_date.outputs.continue == 'true'
     outputs:
-      TEAM_TO_CHANNEL: ${{ steps.compute_team_to_channel.outputs.TEAM_TO_CHANNEL }}
+      SLACK_CHANNEL_ID: ${{ steps.find_slack_channel.outputs.SLACK_CHANNEL_ID }}
     steps:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.x"
 
-      - name: Compute TEAM_TO_CHANNEL JSON
-        id: compute_team_to_channel
+      - name: Find Slack Channel Id
+        id: find_slack_channel
         env:
-          qxx: ${{ needs.get_team_name.outputs.qxx }}
+          SLACK_CHANNEL_NAME: ${{ needs.get_team_name.outputs.slack_channel_name }}
           SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
         run: |
           python -m pip install --upgrade pip
-          pip install requests slack_sdk
+          pip install slack_sdk
 
           python - <<'PY'
           import os
-          import json
+          import sys
           from slack_sdk import WebClient
           from slack_sdk.errors import SlackApiError
 
-          def lookupChannels(prefix, token):
+          def list_channels(client, types):
             """
-            Looks up the public Slack channels whose names start with prefix.
-
-            Parameters:
-            - prefix (str): The channel name prefix to match (e.g. "f26").
-            - token (str): The OAuth token for the Slack API.
-            Returns:
-            - dict: A dictionary mapping channel names to their corresponding channel IDs.
+            Returns a dict mapping channel name -> channel id for all channels
+            of the given types, following Slack's pagination cursor.
             """
-
-            client = WebClient(token=token)
             channels = {}
-            try:
-              # Call the conversations.list method using the WebClient
-              result = client.conversations_list(types="public_channel")
+            cursor = None
+            while True:
+              result = client.conversations_list(
+                types=types, limit=1000, exclude_archived=True, cursor=cursor
+              )
               for channel in result["channels"]:
-                name = channel["name"]
-                if name.startswith(prefix):
-                  channels[name] = channel["id"]
-            except SlackApiError as e:
-              print(f"Error fetching channels: {e.response['error']}")
+                channels[channel["name"]] = channel["id"]
+              cursor = result.get("response_metadata", {}).get("next_cursor")
+              if not cursor:
+                break
             return channels
 
-          def get_team_to_channel_id(prefix, token):
-            channels = lookupChannels(prefix, token)
-            print(f"Channels found with prefix '{prefix}': {channels}")
-            return channels
-
-          qxx = os.getenv("qxx")
+          channel_name = os.environ["SLACK_CHANNEL_NAME"]
           token = os.environ.get("SLACK_BOT_USER_OAUTH_ACCESS_TOKEN")
           if not token:
-              raise EnvironmentError("SLACK_BOT_USER_OAUTH_ACCESS_TOKEN is not set.")
+            raise EnvironmentError("SLACK_BOT_USER_OAUTH_ACCESS_TOKEN is not set.")
 
-          print(f"Looking up channels with prefix '{qxx}' using provided token of length {len(token)}")
-          d = get_team_to_channel_id(qxx, token)
-          if not d:
-              raise SystemExit(f"No Slack channels found with prefix '{qxx}'")
-          json.dump(
-            d,
-            open("team_to_channel.json", "w"),
-            separators=(",", ":")
-          )
+          client = WebClient(token=token)
+          try:
+            channels = list_channels(client, "public_channel,private_channel")
+          except SlackApiError as e:
+            # The bot may lack the groups:read scope needed for private channels;
+            # fall back to public channels only.
+            print(f"Listing public+private channels failed ({e.response['error']}); retrying with public channels only")
+            channels = list_channels(client, "public_channel")
+
+          print(f"Found {len(channels)} channels")
+          channel_id = channels.get(channel_name)
+          if not channel_id:
+            similar = sorted(n for n in channels if channel_name[-6:] in n)
+            print(f"ERROR: No Slack channel named '{channel_name}' found.", file=sys.stderr)
+            print(f"Channels containing '{channel_name[-6:]}': {similar}", file=sys.stderr)
+            print("Check that the channel exists and that the Slack app has been added to it.", file=sys.stderr)
+            sys.exit(1)
+
+          print(f"Slack channel '{channel_name}' has id {channel_id}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"SLACK_CHANNEL_ID={channel_id}\n")
           PY
-
-          TEAM_TO_CHANNEL_JSON=$(cat team_to_channel.json)
-          echo "Computed TEAM_TO_CHANNEL JSON: $TEAM_TO_CHANNEL_JSON"
-
-          {
-            echo "TEAM_TO_CHANNEL<<EOF"
-            echo "$TEAM_TO_CHANNEL_JSON"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
 
   send-to-slack:
     name: Send Report to Slack
     runs-on: ubuntu-latest
-    needs: [check_date, generate_ascii_table, get_team_name, compute_team_to_channel]
+    needs: [check_date, generate_ascii_table, get_team_name, find_slack_channel]
     if: needs.check_date.outputs.continue == 'true'
     env:
-      TEAM_TO_CHANNEL: ${{ needs.compute_team_to_channel.outputs.TEAM_TO_CHANNEL }}
+      SLACK_CHANNEL_NAME: ${{ needs.get_team_name.outputs.slack_channel_name }}
+      SLACK_CHANNEL_ID: ${{ needs.find_slack_channel.outputs.SLACK_CHANNEL_ID }}
     steps:
       - name: Download ASCII Table
         uses: actions/download-artifact@v6
@@ -462,10 +453,9 @@ jobs:
       # $GITHUB_ENV so that the multiline text can be used in the Slack message.
       - name: Debug Environment Variables
         run: |
-          echo "TEAM_TO_CHANNEL: ${{ env.TEAM_TO_CHANNEL }}"
           echo "ORG_NAME: ${{ env.ORG_NAME }}"
           echo "Team: ${{ needs.get_team_name.outputs.team }}"
-          echo "Slack Channel: ${{ fromJSON(env.TEAM_TO_CHANNEL)[needs.get_team_name.outputs.team] }}"
+          echo "Slack Channel: ${{ env.SLACK_CHANNEL_NAME }} (${{ env.SLACK_CHANNEL_ID }})"
           echo "ASCII Table:"
           cat ascii_table_content.txt
       # This step sends the report to the Slack channel associated with the team
@@ -473,7 +463,7 @@ jobs:
         uses: archive/github-actions-slack@v2.9.0
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
-          slack-channel: ${{ fromJSON(env.TEAM_TO_CHANNEL)[needs.get_team_name.outputs.team] }}
+          slack-channel: ${{ env.SLACK_CHANNEL_ID }}
           slack-text: |
             📋 *Kanban Board Status* ✔️ (${{ github.event.repository.name }})
             ```
