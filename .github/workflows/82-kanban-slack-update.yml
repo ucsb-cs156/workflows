@@ -24,6 +24,10 @@
 # The team name is taken from the last 6 characters of the repository name
 # (e.g. "f26-01" for team01-f26-01).  The report is posted to the Slack channel
 # named SLACK_CHANNEL_PREFIX + team name, e.g. "team-f26-01".
+#
+# The columns reported on are discovered from the board: the options of the
+# project's STATUS_FIELD (default "Status") single-select field, in board order.
+# Pass COLUMNS to override that with an explicit comma separated list.
 
 name: "82-kanban-slack-update: Post Kanban status to Slack"
 
@@ -39,10 +43,15 @@ on:
         required: true
         type: string
       COLUMNS:
-        description: "Comma separated list of Kanban board columns to report on"
+        description: "Comma separated list of Kanban board columns to report on. Leave empty to report on all columns found on the board."
         required: false
         type: string
-        default: "Todo, In Progress, In Review, Done"
+        default: ""
+      STATUS_FIELD:
+        description: "Name of the single-select project field whose options are the board columns"
+        required: false
+        type: string
+        default: "Status"
       SLACK_CHANNEL_PREFIX:
         description: "Prefix added to the team name to get the Slack channel name, e.g. team- for team-f26-01"
         required: false
@@ -62,7 +71,9 @@ env:
   ORG_NAME: ${{ github.repository_owner }}
   REPO_NAME: ${{ github.event.repository.name }}
   # The columns in the Kanban board that we are interested in
+  # (empty = discover from the board's STATUS_FIELD)
   COLUMNS: ${{ inputs.COLUMNS }}
+  STATUS_FIELD: ${{ inputs.STATUS_FIELD }}
   START_DATE: ${{ inputs.START_DATE }}
   END_DATE: ${{ inputs.END_DATE }}
 
@@ -198,12 +209,49 @@ jobs:
           cat project_id.txt
           pwd
 
+      - name: Fetch Kanban Columns
+        id: fetch_columns
+        env:
+          COLUMNS_INPUT: ${{ env.COLUMNS }}
+          STATUS_FIELD: ${{ env.STATUS_FIELD }}
+        run: |
+          set -euo pipefail
+          PROJECT_ID=$(cat project_id.txt)
+
+          if [[ -n "${COLUMNS_INPUT// /}" ]]; then
+            echo "Using COLUMNS input: $COLUMNS_INPUT"
+            jq -nc --arg c "$COLUMNS_INPUT" \
+              '$c | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0))' \
+              > columns.json
+          else
+            echo "Discovering columns from the '$STATUS_FIELD' field of the project"
+            gh api graphql -f query='
+              query($project: ID!, $field: String!) {
+                node(id: $project) {
+                  ... on ProjectV2 {
+                    field(name: $field) {
+                      ... on ProjectV2SingleSelectField { name options { name } }
+                    }
+                  }
+                }
+              }' \
+              -f project="$PROJECT_ID" \
+              -f field="$STATUS_FIELD" \
+              --jq '[.data.node.field.options[]?.name]' > columns.json
+          fi
+
+          echo "Columns: $(cat columns.json)"
+          if [[ "$(jq length columns.json)" -eq 0 ]]; then
+            echo "ERROR: No columns found. Check that the project has a single-select field named '$STATUS_FIELD'." >&2
+            exit 1
+          fi
+
       - name: Output GraphQL Query Result
         id: output_query
         run: |
           ls
           PROJECT_ID=$(cat project_id.txt)
-          GQL_QUERY="{ node(id: \"$PROJECT_ID\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 100) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { field { ... on ProjectV2Field { name } } name } ... on ProjectV2ItemFieldTextValue { field { ... on ProjectV2Field { name } } text } } } content { ... on Issue { title assignees(first: 10) { nodes { login } } } ... on PullRequest { title assignees(first: 10) { nodes { login } } } } } } } } }"
+          GQL_QUERY="{ node(id: \"$PROJECT_ID\") { ... on ProjectV2 { items(first: 100) { nodes { id fieldValues(first: 100) { nodes { ... on ProjectV2ItemFieldSingleSelectValue { field { ... on ProjectV2FieldCommon { name } } name } ... on ProjectV2ItemFieldTextValue { field { ... on ProjectV2Field { name } } text } } } content { ... on Issue { title assignees(first: 10) { nodes { login } } } ... on PullRequest { title assignees(first: 10) { nodes { login } } } } } } } } }"
           QUERY=$(jq -nc --arg q "$GQL_QUERY" '{"query": $q}')
           RESPONSE=$(curl -s -X POST \
             -H "Authorization: Bearer $PAT" \
@@ -219,19 +267,24 @@ jobs:
         id: count_issues
         shell: python
         env:
-          columns: ${{ env.COLUMNS }}
+          STATUS_FIELD: ${{ env.STATUS_FIELD }}
         run: |
           import json
           import os
           with open('project_data.json', 'r') as f:
               data = json.load(f)
+          with open('columns.json', 'r') as f:
+              columns = json.load(f)
+          status_field = os.environ.get('STATUS_FIELD', 'Status')
 
           issue_counts = {}
-          columns = [c.strip() for c in os.environ.get('columns', '').split(',')]
 
           for item in data['data']['node']['items']['nodes']:
+              # The item's value of the Status field, if it is one of the columns
               column_field = next(
-                  (n for n in item['fieldValues']['nodes'] if n.get('name') in columns),
+                  (n for n in item['fieldValues']['nodes']
+                   if n.get('name') in columns
+                   and (n.get('field') or {}).get('name', status_field) == status_field),
                   None
               )
               if column_field is not None:
@@ -259,7 +312,9 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: issue_counts
-          path: issue_counts.json
+          path: |
+            issue_counts.json
+            columns.json
           overwrite: true
 
   # This job generates an ASCII table from the issue counts
@@ -279,13 +334,12 @@ jobs:
       - name: Generate ASCII Table
         id: generate_table
         shell: python
-        env:
-          columns: ${{ env.COLUMNS }}
         run: |
           import json
-          import os
           import sys
 
+          with open('columns.json', 'r') as f:
+              columns = json.load(f)
           with open('issue_counts.json', 'r') as f:
               content = f.read()
 
@@ -298,7 +352,6 @@ jobs:
           # Collect all assignees and track unassigned issues
           assignees = {}
           unassigned_counts = {}
-          columns = [c.strip() for c in os.environ.get('columns', '').split(',')]
 
           for column in issue_counts:
               unassigned_counts[column] = 0
@@ -310,15 +363,22 @@ jobs:
                           assignees[assignee] = {}
                       assignees[assignee][column] = count
 
+          # Column headers: abbreviate to 4 characters, but if two columns
+          # would get the same abbreviation, use the full names instead.
+          abbrevs = [column[:4] for column in columns]
+          if len(set(abbrevs)) != len(abbrevs):
+              abbrevs = list(columns)
+          widths = [max(4, len(a)) for a in abbrevs]
+
           # Generate the table header with left-aligned text
           header = "| login            |"
-          for column in columns:
-              header += f" {column[:4]} |"
+          for abbrev, width in zip(abbrevs, widths):
+              header += f" {abbrev:<{width}} |"
 
           # Define the separator with exact dash counts for each column
           separator = "|------------------|"
-          for _ in columns:
-              separator += "------|"
+          for width in widths:
+              separator += "-" * (width + 2) + "|"
 
           # Construct the full table
           table = f"{header}\n{separator}\n"
@@ -326,16 +386,16 @@ jobs:
           # Generate the table rows
           for assignee in assignees:
               row = f"| {assignee[:17]:<17}|"
-              for column in columns:
+              for column, width in zip(columns, widths):
                   count = str(assignees[assignee].get(column, 0))
-                  row += f" {count:>4} |"
+                  row += f" {count:>{width}} |"
               table += row + "\n"
 
           # Add the unassigned row
           unassigned_row = f"| {'UNASSIGNED':<17}|"
-          for column in columns:
+          for column, width in zip(columns, widths):
               count = str(unassigned_counts.get(column, 0))
-              unassigned_row += f" {count:>4} |"
+              unassigned_row += f" {count:>{width}} |"
           table += unassigned_row + "\n"
 
           print(f"ASCII Table:\n{table}")
