@@ -9,3 +9,5 @@ Each workflow starts with a comment showing an example invocation.
 * `82-kanban-slack-update.yml`: posts a table of Kanban board issue counts (by column and
   assignee) to the team's Slack channel.  Used by the team01/team02 repos; the dates come from
   organization variables (e.g. `TEAM01_START_DATE` / `TEAM01_END_DATE`) passed in as inputs.
+  The columns are discovered from the board's `Status` field, so renamed or added columns are
+  reported automatically.
