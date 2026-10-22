@@ -1,3 +1,13 @@
+# SUPERSEDED (October 2026): the Kanban board Slack summary now runs once,
+# centrally, from ucsb-cs156-<qxx>/membership-scripts (workflow 82 there,
+# kanban_slack_update.py), which iterates over all team repos of every
+# assignment whose date window is open.  The per-repo wrappers that called
+# this reusable workflow are being removed from the starters and team repos;
+# see https://ucsb-cs156.github.io/topics/github_actions/workflow_82.html and
+# https://github.com/ucsb-cs156-f26/membership-scripts/issues/10.
+# This file is kept for one quarter for repos that still reference it and
+# will then be deleted.
+#
 # Reusable workflow: post a Kanban board status table to the team's Slack channel.
 #
 # Instructions to set up the workflow can be found here:
