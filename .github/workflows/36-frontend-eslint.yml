@@ -10,6 +10,11 @@ name: "36-frontend-eslint: JavaScript style checking"
 on:
   workflow_call:
     inputs:
+      enable_typescript:
+        description: "Run `npx tsc -b` in frontend/ right after `npm ci`, so a type error fails fast before the slower work below. Opt in from repos whose frontend is TypeScript; off by default."
+        required: false
+        type: boolean
+        default: false
       TIMEOUT:
         required: false
         type: number
@@ -34,6 +39,10 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+        working-directory: ./frontend
+      - name: Type check (fail fast; opt-in via enable_typescript)
+        if: ${{ inputs.enable_typescript }}
+        run: npx tsc -b
         working-directory: ./frontend
       - run: npx eslint --max-warnings 0 .
         working-directory: ./frontend
