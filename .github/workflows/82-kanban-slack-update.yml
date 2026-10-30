@@ -194,6 +194,7 @@ jobs:
           PROJECT_TITLE="${{ needs.get_team_name.outputs.repository }}"
 
           # Query first 100 projects; paginate if you might have more than 100.
+          # shellcheck disable=SC2016  # $org/$first are GraphQL variables, not shell variables
           PROJECT_ID="$(
             gh api graphql -f query='
               query($org: String!, $first: Int!) {
@@ -235,6 +236,7 @@ jobs:
               > columns.json
           else
             echo "Discovering columns from the '$STATUS_FIELD' field of the project"
+            # shellcheck disable=SC2016  # $project/$field are GraphQL variables, not shell variables
             gh api graphql -f query='
               query($project: ID!, $field: String!) {
                 node(id: $project) {
@@ -529,9 +531,11 @@ jobs:
           echo "ASCII Table Content:"
           printf "%s\n" "$table"  # Use printf for better handling of multiline text
           echo "$table" > ascii_table_content.txt
-          echo "ascii_table_content<<EOF" >> $GITHUB_ENV
-          cat ascii_table_content.txt >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          {
+            echo "ascii_table_content<<EOF"
+            cat ascii_table_content.txt
+            echo "EOF"
+          } >> "$GITHUB_ENV"
       # This step is used to debug the environment variables and Slack text.
       # The ASCII table content is written to a file and then read back into
       # $GITHUB_ENV so that the multiline text can be used in the Slack message.
