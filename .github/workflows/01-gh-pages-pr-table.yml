@@ -51,10 +51,12 @@ jobs:
           OWNER_PLUS_REPOSITORY=${{github.repository}}
           OWNER=${{ github.repository_owner }}
           REPOSITORY=${OWNER_PLUS_REPOSITORY/$OWNER\//}
-          echo "repo: ${OWNER_PLUS_REPOSITORY}" >> ${CONFIG_YML}
-          echo "owner: ${OWNER}" >> ${CONFIG_YML}
-          echo "repo_name: ${REPOSITORY}" >> ${CONFIG_YML}    
-          echo "pull_requests: $(gh pr list -s open --json url,author,number,title,headRefName)" >> ${CONFIG_YML}
+          {
+            echo "repo: ${OWNER_PLUS_REPOSITORY}"
+            echo "owner: ${OWNER}"
+            echo "repo_name: ${REPOSITORY}"
+            echo "pull_requests: $(gh pr list -s open --json url,author,number,title,headRefName)"
+          } >> "${CONFIG_YML}"
           mkdir -p site
           cp -r ${DOCS_INDEX_DIR}/* site
 

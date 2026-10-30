@@ -35,18 +35,17 @@ jobs:
     - name: Figure out Branch name
       id: get-branch-name
       run: | 
-          GITHUB_HEAD_REF="${GITHUB_HEAD_REF}"
-          echo GITHUB_HEAD_REF=${GITHUB_HEAD_REF}
+          echo "GITHUB_HEAD_REF=${GITHUB_HEAD_REF}"
           GITHUB_REF_CLEANED=${GITHUB_REF/refs\/heads\//}
-          echo GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED}
+          echo "GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED}"
           GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED//\//-}
-          echo GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED}
+          echo "GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED}"
           BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_CLEANED}}"
           echo "branch_name=${BRANCH}"
           echo "branch_name=${BRANCH}" >> "$GITHUB_OUTPUT"
 
   build-javadoc-for-this-pr:
-    name: Javadoc (PR ${{ matrix.value.number }}, Branch ${{ matrix.value.headRefName }})
+    name: Javadoc (PR ${{ needs.get-pr-num.outputs.pr_number }}, Branch ${{ needs.get-pr-num.outputs.branch_name }})
     runs-on: ubuntu-latest
     needs: [get-pr-num]        
     env:

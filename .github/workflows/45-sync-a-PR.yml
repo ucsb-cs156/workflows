@@ -40,13 +40,15 @@ jobs:
           EOF
        
           # Parse the JSON output to extract values
-          echo "APP=$(cat pr_info.json | jq -r '.app')" >> "$GITHUB_OUTPUT"
-          echo "REPO=$(cat pr_info.json | jq -r '.repo')" >> "$GITHUB_OUTPUT"
-          echo "BRANCH=$(cat pr_info.json | jq -r '.branch')" >> "$GITHUB_OUTPUT"
-          echo "DOKKU=$(cat pr_info.json | jq -r '.dokku')" >> "$GITHUB_OUTPUT"
-          echo "APP_URL=https://$(cat pr_info.json | jq -r '.app').dokku-$(cat pr_info.json | jq -r '.dokku').cs.ucsb.edu" >> "$GITHUB_OUTPUT"
-          echo "OWNER=$(cat pr_info.json | jq -r '.owner')" >> "$GITHUB_OUTPUT"
-          echo "REPO_NAME=$(cat pr_info.json | jq -r '.repo_name')" >> "$GITHUB_OUTPUT"
+          {
+            echo "APP=$(jq -r '.app' pr_info.json)"
+            echo "REPO=$(jq -r '.repo' pr_info.json)"
+            echo "BRANCH=$(jq -r '.branch' pr_info.json)"
+            echo "DOKKU=$(jq -r '.dokku' pr_info.json)"
+            echo "APP_URL=https://$(jq -r '.app' pr_info.json).dokku-$(jq -r '.dokku' pr_info.json).cs.ucsb.edu"
+            echo "OWNER=$(jq -r '.owner' pr_info.json)"
+            echo "REPO_NAME=$(jq -r '.repo_name' pr_info.json)"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Debugging output
         if: always()
@@ -72,8 +74,7 @@ jobs:
           echo "::notice:: Executing dokku config:set for SOURCE_REPO..."
           ssh -i ~/.ssh/id_ed25519 pconrad@csil.cs.ucsb.edu ${{env.DOKKU}} config:set --no-restart ${{ env.APP }} SOURCE_REPO=${{ env.REPO }}
           echo "::group:: Executing dokku git:sync"
-          ssh -i ~/.ssh/id_ed25519 pconrad@csil.cs.ucsb.edu ${{env.DOKKU}} git:sync ${{ env.APP }} ${{ env.REPO }} ${{ env.BRANCH }}
-          if [ $? -ne 0 ]; then
+          if ! ssh -i ~/.ssh/id_ed25519 pconrad@csil.cs.ucsb.edu ${{env.DOKKU}} git:sync ${{ env.APP }} ${{ env.REPO }} ${{ env.BRANCH }}; then
             echo "::error::Dokku git sync failed. Exiting."
             exit 1
           fi

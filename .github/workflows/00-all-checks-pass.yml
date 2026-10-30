@@ -30,7 +30,7 @@ jobs:
           while true; do
             raw_data1=$(gh api "repos/$repo/pulls/$pr_number")
             # echo "raw_data=$raw_data1"
-            head_sha=$(echo $raw_data1 | jq -r '.head.sha' --)
+            head_sha=$(echo "$raw_data1" | jq -r '.head.sha' --)
             # echo "head_sha=$head_sha"
             statuses=$(gh api "repos/$repo/commits/$head_sha/check-runs" --jq '.check_runs' )
             # echo "statuses=$statuses"

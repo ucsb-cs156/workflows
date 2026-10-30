@@ -52,10 +52,10 @@ jobs:
       id: check-java
       run: |
         if [ -d "src/main/java" ] && [ -n "$(find src/main/java -name '*.java' -type f)" ]; then
-          echo "java-files-exist=true" >> $GITHUB_OUTPUT
+          echo "java-files-exist=true" >> "$GITHUB_OUTPUT"
           echo "Java source files found in src/main/java"
         else
-          echo "java-files-exist=false" >> $GITHUB_OUTPUT
+          echo "java-files-exist=false" >> "$GITHUB_OUTPUT"
           echo "No Java source files found in src/main/java"
         fi
   

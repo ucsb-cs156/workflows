@@ -41,12 +41,11 @@ jobs:
     - name: Figure out branch name
       id: get-branch-name
       run: | 
-          GITHUB_HEAD_REF="${GITHUB_HEAD_REF}"
-          echo GITHUB_HEAD_REF=${GITHUB_HEAD_REF}
+          echo "GITHUB_HEAD_REF=${GITHUB_HEAD_REF}"
           GITHUB_REF_CLEANED=${GITHUB_REF/refs\/heads\//}
-          echo GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED}
+          echo "GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED}"
           GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED//\//-}
-          echo GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED}
+          echo "GITHUB_REF_CLEANED=${GITHUB_REF_CLEANED}"
           BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_CLEANED}}"
           echo "branch_name=${BRANCH}"
           echo "branch_name=${BRANCH}" >> "$GITHUB_ENV"    

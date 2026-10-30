@@ -50,7 +50,7 @@ jobs:
          gh pr list -s open --json url,author,number,title,headRefName 
          gh pr list -s open --json url,author,number,title,headRefName > prs.json
          cat prs.json
-         pull_requests=`cat prs.json`
+         pull_requests=$(cat prs.json)
          echo "pull_requests=${pull_requests}"
          echo "pull_requests=${pull_requests}" >> "$GITHUB_OUTPUT"
 
@@ -68,10 +68,12 @@ jobs:
           OWNER_PLUS_REPOSITORY=${{github.repository}}
           OWNER=${{ github.repository_owner }}
           REPOSITORY=${OWNER_PLUS_REPOSITORY/$OWNER\//}
-          echo "repo: ${OWNER_PLUS_REPOSITORY}" >> ${CONFIG_YML}
-          echo "owner: ${OWNER}" >> ${CONFIG_YML}
-          echo "repo_name: ${REPOSITORY}" >> ${CONFIG_YML}    
-          cat ${CONFIG_YML}
+          {
+            echo "repo: ${OWNER_PLUS_REPOSITORY}"
+            echo "owner: ${OWNER}"
+            echo "repo_name: ${REPOSITORY}"
+          } >> "${CONFIG_YML}"
+          cat "${CONFIG_YML}"
 
     - name: Store PRs as JSON in _config.yml
       run: |
@@ -120,7 +122,7 @@ jobs:
          gh pr list -s open --json url,author,number,title,headRefName 
          gh pr list -s open --json url,author,number,title,headRefName > prs.json
          cat prs.json
-         pull_requests=`cat prs.json`
+         pull_requests=$(cat prs.json)
          echo "pull_requests=${pull_requests}"
          echo "pull_requests=${pull_requests}" >> "$GITHUB_OUTPUT"
 
