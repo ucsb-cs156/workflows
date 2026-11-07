@@ -90,7 +90,7 @@ jobs:
         
     - name: Deploy 🚀    
       if: always() # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -145,7 +145,7 @@ jobs:
         ls -lRt
     - name: a-javadoc Deploy Javadoc (Main) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -171,7 +171,7 @@ jobs:
         if_no_artifact_found: error
     - name: b-chromatic Deploy chromatic (Main) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -198,7 +198,7 @@ jobs:
 
     - name: c-jacoco Deploy Jacoco (Main) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -225,7 +225,7 @@ jobs:
         if_no_artifact_found: error
     - name:  d-pitest Deploy Pitest (main) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -252,7 +252,7 @@ jobs:
 
     - name: e-coverage Deploy Coverage (main) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -279,7 +279,7 @@ jobs:
 
     - name: f-stryker Deploy Stryker (main) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -325,7 +325,7 @@ jobs:
 
     - name: a-javadoc Deploy Javadoc (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -353,7 +353,7 @@ jobs:
 
     - name: b-chromatic Deploy chromatic (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -381,7 +381,7 @@ jobs:
 
     - name: c-jacoco Deploy Jacoco (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -409,7 +409,7 @@ jobs:
 
     - name: d-pitest Deploy Pitest (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -438,7 +438,7 @@ jobs:
 
     - name: e-coverage Deploy Coverage (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -466,7 +466,7 @@ jobs:
 
     - name: f-stryker Deploy Stryker (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3

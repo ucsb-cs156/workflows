@@ -44,7 +44,7 @@ jobs:
         run: docker compose -f "$COMPOSE_FILE" up -d --build
 
       - name: Run Healthcheck
-        uses: Wandalen/wretry.action@master
+        uses: ucsb-cs156/wretry.action@v3.8.1
         env:
           CONTAINER_NAME: ${{ inputs.container-name }}
         with:

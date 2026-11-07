@@ -87,7 +87,7 @@ jobs:
         if: always() # always upload artifacts, even if tests fail
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        uses: Wandalen/wretry.action@master
+        uses: ucsb-cs156/wretry.action@v3.8.1
         with:
           action: JamesIves/github-pages-deploy-action@v4.8.0
           attempt_limit: 3

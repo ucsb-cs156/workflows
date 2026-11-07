@@ -95,7 +95,7 @@ jobs:
 
     - name: Deploy 🚀
       if: always() # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       env:
         RESET: ${{ inputs.RESET_GH_PAGES }}
       with:

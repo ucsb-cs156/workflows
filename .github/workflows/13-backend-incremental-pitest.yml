@@ -110,7 +110,7 @@ jobs:
         
     - name: Deploy 🚀
       if: always() # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
