@@ -36,12 +36,12 @@ jobs:
     timeout-minutes: ${{ inputs.TIMEOUT }}
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0  # Fetch full history for accurate file change detection
     
     - name: Set up Java (version from .java-version file)
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v6
       with:
          distribution: ${{ inputs.JAVA_DISTRIBUTION }}
          java-version-file: ./.java-version
@@ -77,7 +77,7 @@ jobs:
       
     - name: Upload SARIF file for Code Scanning
       if: steps.check-java.outputs.java-files-exist == 'true' && hashFiles('pmd-report.sarif') != ''
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: pmd-report.sarif
 

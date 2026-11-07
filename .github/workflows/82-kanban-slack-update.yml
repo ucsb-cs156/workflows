@@ -321,7 +321,7 @@ jobs:
           echo "Contents of issue_counts.json:"
           cat issue_counts.json
       - name: Upload issue counts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: issue_counts
           path: |
@@ -339,7 +339,7 @@ jobs:
     if: needs.check_date.outputs.continue == 'true'
     steps:
       - name: Download issue counts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: issue_counts
 
@@ -429,7 +429,7 @@ jobs:
               f.write(table)
 
       - name: Upload ASCII Table
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ascii_table
           path: ascii_table.txt
@@ -520,7 +520,7 @@ jobs:
       SLACK_CHANNEL_ID: ${{ needs.find_slack_channel.outputs.SLACK_CHANNEL_ID }}
     steps:
       - name: Download ASCII Table
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: ascii_table
 
@@ -548,7 +548,7 @@ jobs:
           cat ascii_table_content.txt
       # This step sends the report to the Slack channel associated with the team
       - name: Send Report to Slack
-        uses: archive/github-actions-slack@v2.9.0
+        uses: archive/github-actions-slack@v3.1.0
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           slack-channel: ${{ env.SLACK_CHANNEL_ID }}

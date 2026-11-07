@@ -43,7 +43,7 @@ jobs:
       pull_requests: ${{ steps.get-prs.outputs.pull_requests }}
     steps:
     - name: Checkout local code to establish repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Get Pull Requests from Github api
       id: get-prs
       run: |
@@ -61,7 +61,7 @@ jobs:
 
     steps:
     - name: Checkout local code to establish repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Append name of site to _config.yml
       run: | 
           CONFIG_YML=frontend/docs-index/_config.yml
@@ -90,7 +90,7 @@ jobs:
         
     - name: Deploy 🚀    
       if: always() # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -106,11 +106,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: setup - Checkout local code to establish repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         fetch-depth: 1
     - name: setup - Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       if: ${{ inputs.FRONTEND }}
       with:
         node-version-file: 'frontend/package.json'
@@ -131,7 +131,7 @@ jobs:
       run: mkdir -p ${{ env.javadoc_dest  }}
     - name: a-javadoc Download artifact
       if: ${{ inputs.BACKEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -145,7 +145,7 @@ jobs:
         ls -lRt
     - name: a-javadoc Deploy Javadoc (Main) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -161,7 +161,7 @@ jobs:
       run: mkdir -p ${{ env.chromatic_dest }}
     - name: b-chromatic Download artifact
       if: ${{ inputs.FRONTEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -171,7 +171,7 @@ jobs:
         if_no_artifact_found: error
     - name: b-chromatic Deploy chromatic (Main) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -187,7 +187,7 @@ jobs:
       run: mkdir -p ${{ env.jacoco_dest }}
     - name: c-jacoco Download artifact
       if: ${{ inputs.BACKEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -198,7 +198,7 @@ jobs:
 
     - name: c-jacoco Deploy Jacoco (Main) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -215,7 +215,7 @@ jobs:
       run: mkdir -p ${{ env.pitest_dest }}
     - name:  d-pitest Download artifact
       if: ${{ inputs.BACKEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -225,7 +225,7 @@ jobs:
         if_no_artifact_found: error
     - name:  d-pitest Deploy Pitest (main) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -241,7 +241,7 @@ jobs:
       run: mkdir -p ${{ env.coverage_dest }}
     - name: e-coverage Download artifact
       if: ${{ inputs.FRONTEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -252,7 +252,7 @@ jobs:
 
     - name: e-coverage Deploy Coverage (main) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -268,7 +268,7 @@ jobs:
       run: mkdir -p ${{ env.stryker_dest }}
     - name: f-stryker Download artifact
       if: ${{ inputs.FRONTEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -279,7 +279,7 @@ jobs:
 
     - name: f-stryker Deploy Stryker (main) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -306,7 +306,7 @@ jobs:
     steps:
     - name: a-javadoc Checkout local code to establish repo
       if: ${{ inputs.BACKEND }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: a-javadoc Make directory in case it doesn't exist
       if: ${{ inputs.BACKEND }}
@@ -314,7 +314,7 @@ jobs:
 
     - name: a-javadoc Download artifact
       if: ${{ inputs.BACKEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -325,7 +325,7 @@ jobs:
 
     - name: a-javadoc Deploy Javadoc (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -342,7 +342,7 @@ jobs:
 
     - name:  b-chromatic Download artifact
       if: ${{ inputs.FRONTEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -353,7 +353,7 @@ jobs:
 
     - name: b-chromatic Deploy chromatic (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -370,7 +370,7 @@ jobs:
 
     - name:  c-jacoco Download artifact
       if: ${{ inputs.BACKEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -381,7 +381,7 @@ jobs:
 
     - name: c-jacoco Deploy Jacoco (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -398,7 +398,7 @@ jobs:
 
     - name: d-pitest Download artifact
       if: ${{ inputs.BACKEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -409,7 +409,7 @@ jobs:
 
     - name: d-pitest Deploy Pitest (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -427,7 +427,7 @@ jobs:
 
     - name: e-coverage Download artifact
       if: ${{ inputs.FRONTEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -438,7 +438,7 @@ jobs:
 
     - name: e-coverage Deploy Coverage (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
@@ -455,7 +455,7 @@ jobs:
 
     - name: f-stryker Download artifact
       if: ${{ inputs.FRONTEND }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: 02-gh-pages-rebuild.yml
         github_token: ${{secrets.GITHUB_TOKEN}}
@@ -466,7 +466,7 @@ jobs:
 
     - name: f-stryker Deploy Stryker (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: Wandalen/wretry.action@master
+      uses: ucsb-cs156/wretry.action@v3.8.1
       with:
         action: JamesIves/github-pages-deploy-action@v4
         attempt_limit: 3
