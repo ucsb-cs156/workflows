@@ -34,7 +34,7 @@ jobs:
       - uses: szenius/set-timezone@v2.0
         with:
           timezoneLinux: "America/Los_Angeles"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: 
           fetch-depth: 2
 
@@ -67,7 +67,7 @@ jobs:
         working-directory: ./frontend
       - name: Upload coverage report to Artifacts
         if: always() # always upload artifacts, even if tests fail
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vitest-coverage
           path: frontend/coverage/*

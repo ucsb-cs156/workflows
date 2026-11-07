@@ -39,7 +39,7 @@ jobs:
     timeout-minutes: ${{ inputs.TIMEOUT }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Figure out branch name
       id: get-branch-name
       run: | 
@@ -55,7 +55,7 @@ jobs:
           echo "branch_name_cleaned=${BRANCH_CLEANED}"
           echo "branch_name_cleaned=${BRANCH_CLEANED}" >> "$GITHUB_ENV"  
     - name: Set up Java (version from .java-version file)
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@v6
       with:
          distribution: ${{ inputs.JAVA_DISTRIBUTION }} 
          java-version-file: ./.java-version
@@ -72,13 +72,13 @@ jobs:
       run: mvn -ntp -B pitest:mutationCoverage -DmutationThreshold=100 -Dthreads="$(nproc)" -DjvmArgs="-XX:TieredStopAtLevel=1"
     - name: Upload Pitest History to Artifacts
       if: always() # always upload artifacts, even if tests fail
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: pitest-${{env.branch_name_cleaned}}-history.bin
         path: target/pit-history/history.bin
     - name: Upload Pitest to Artifacts
       if: always() # always upload artifacts, even if tests fail
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: pitest
         path: target/pit-reports/* 

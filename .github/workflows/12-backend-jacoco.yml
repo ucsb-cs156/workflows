@@ -37,9 +37,9 @@ jobs:
     timeout-minutes: ${{ inputs.TIMEOUT }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up Java (version from .java-version file)
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@v6
       with:
          distribution: ${{ inputs.JAVA_DISTRIBUTION }} 
          java-version-file: ./.java-version

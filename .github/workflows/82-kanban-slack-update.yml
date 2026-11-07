@@ -321,7 +321,7 @@ jobs:
           echo "Contents of issue_counts.json:"
           cat issue_counts.json
       - name: Upload issue counts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: issue_counts
           path: |
@@ -429,7 +429,7 @@ jobs:
               f.write(table)
 
       - name: Upload ASCII Table
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ascii_table
           path: ascii_table.txt

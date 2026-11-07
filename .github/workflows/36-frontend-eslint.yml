@@ -29,7 +29,7 @@ jobs:
       - uses: szenius/set-timezone@v2.0
         with:
           timezoneLinux: "America/Los_Angeles"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: 
           fetch-depth: 2
       - name: Setup Node.js
