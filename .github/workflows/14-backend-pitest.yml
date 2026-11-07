@@ -69,7 +69,7 @@ jobs:
     # main branch changes
 
     - name: Pitest
-      run: mvn -ntp -B pitest:mutationCoverage -DmutationThreshold=100 
+      run: mvn -ntp -B pitest:mutationCoverage -DmutationThreshold=100 -Dthreads="$(nproc)"
     - name: Upload Pitest History to Artifacts
       if: always() # always upload artifacts, even if tests fail
       uses: actions/upload-artifact@v4
