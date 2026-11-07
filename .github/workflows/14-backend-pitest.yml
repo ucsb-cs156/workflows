@@ -55,7 +55,7 @@ jobs:
           echo "branch_name_cleaned=${BRANCH_CLEANED}"
           echo "branch_name_cleaned=${BRANCH_CLEANED}" >> "$GITHUB_ENV"  
     - name: Set up Java (version from .java-version file)
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
          distribution: ${{ inputs.JAVA_DISTRIBUTION }} 
          java-version-file: ./.java-version

@@ -39,7 +39,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Java (version from .java-version file)
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
          distribution: ${{ inputs.JAVA_DISTRIBUTION }} 
          java-version-file: ./.java-version
