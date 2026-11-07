@@ -128,7 +128,7 @@ jobs:
          echo "pull_requests=${pull_requests}" >> "$GITHUB_OUTPUT"
     - name: Setup Node.js
       if: ${{ inputs.FRONTEND }}
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version-file: 'frontend/package.json'
         cache: 'npm'
@@ -179,7 +179,7 @@ jobs:
         token: ${{ github.token }}
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version-file: 'frontend/package.json'
         cache: 'npm'
@@ -331,7 +331,7 @@ jobs:
       with: 
         fetch-depth: 2
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version-file: 'frontend/package.json'
         cache: 'npm'
@@ -364,7 +364,7 @@ jobs:
       with: 
         fetch-depth: 2
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version-file: 'frontend/package.json'
         cache: 'npm'
@@ -483,7 +483,7 @@ jobs:
         token: ${{ github.token }}
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version-file: 'frontend/package.json'
         cache: 'npm'
@@ -672,7 +672,7 @@ jobs:
          mkdir -p ${{ env.destination }}
       
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version-file: 'frontend/package.json'
         cache: 'npm'
@@ -725,7 +725,7 @@ jobs:
          mkdir -p ${{ env.destination }}
          mkdir -p ${{ env.history_destination}}
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version-file: 'frontend/package.json'
         cache: 'npm'
