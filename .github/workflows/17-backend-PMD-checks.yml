@@ -77,7 +77,7 @@ jobs:
       
     - name: Upload SARIF file for Code Scanning
       if: steps.check-java.outputs.java-files-exist == 'true' && hashFiles('pmd-report.sarif') != ''
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: pmd-report.sarif
 
