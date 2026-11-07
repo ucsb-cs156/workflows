@@ -62,14 +62,14 @@ jobs:
          cache: 'maven'
          cache-dependency-path: 'pom.xml' 
     - name: Build with Maven
-      run: mvn -ntp -B  test 
+      run: mvn -ntp -B test-compile # pitest runs the tests itself (coverage phase); don't run them twice
     
     # Note that we DO NOT download history in this job;
     # this job is intended as a "reset" of the history each time the 
     # main branch changes
 
     - name: Pitest
-      run: mvn -ntp -B pitest:mutationCoverage -DmutationThreshold=100 -Dthreads="$(nproc)"
+      run: mvn -ntp -B pitest:mutationCoverage -DmutationThreshold=100 -Dthreads="$(nproc)" -DjvmArgs="-XX:TieredStopAtLevel=1"
     - name: Upload Pitest History to Artifacts
       if: always() # always upload artifacts, even if tests fail
       uses: actions/upload-artifact@v4
