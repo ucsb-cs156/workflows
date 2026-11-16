@@ -5,7 +5,10 @@ Each workflow starts with a comment showing an example invocation.
 
 * `37-frontend-storybook-coverage.yml`: reports which React components and pages under
   `frontend/src/main` have no matching story under `frontend/src/stories` (one-to-one directory
-  mirroring convention), as a table in the job summary of each run. Report-only by default; pass
+  mirroring convention), as a table in the job summary of each run, and publishes an HTML copy to
+  the repo's GitHub Pages site (`storybook-coverage/` for main, `prs/<N>/storybook-coverage/` for
+  PRs; the caller must grant `contents: write`). Workflows `02`/`04` produce and publish the same
+  report when the whole gh-pages site is rebuilt. Report-only by default; pass
   `FAIL_ON_MISSING_STORIES: true` to make it a failing check once a repo reaches 100%. The work is
   done by `python/storybook_coverage.py` (tests in `python/test_storybook_coverage.py`, run by
   `121-python-unit-tests.yml`).

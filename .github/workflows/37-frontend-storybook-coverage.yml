@@ -1,4 +1,10 @@
-# Example invocation (report only; never fails the build):
+# Example invocation (report only; never fails the build).  The calling
+# workflow must grant `permissions: contents: write` so the HTML report can
+# be published to the gh-pages branch (or pass PUBLISH_TO_GH_PAGES: false):
+# permissions:
+#   contents: write
+#   pages: write
+#   id-token: write
 # jobs:
 #   storybook-coverage:
 #     uses: ucsb-cs156/workflows/.github/workflows/37-frontend-storybook-coverage.yml@main
@@ -23,7 +29,11 @@ name: "37-frontend-storybook-coverage: Report components without stories"
 #   frontend/src/main/pages/Foo/BarPage.jsx  -> frontend/src/stories/pages/Foo/BarPage.stories.jsx
 #
 # The report appears in the job summary of the workflow run
-# (Actions tab -> this run -> Summary).
+# (Actions tab -> this run -> Summary).  An HTML version is also published
+# to the repo's GitHub Pages site, at storybook-coverage/ for pushes to main
+# and prs/<PR number>/storybook-coverage/ for pull requests, alongside the
+# javadoc, coverage, etc. reports (see workflows 02/04 and
+# frontend/docs-index/index.md in each project repo).
 #
 # By default this workflow only *reports*; it never fails the build.  Once
 # every component has a story, pass FAIL_ON_MISSING_STORIES: true from the
@@ -55,10 +65,20 @@ on:
         required: false
         type: string
         default: "frontend/src"
+      PUBLISH_TO_GH_PAGES:
+        description: "Publish the HTML report to the gh-pages branch (storybook-coverage/ for main, prs/<N>/storybook-coverage/ for PRs). Requires the caller to grant contents: write."
+        required: false
+        type: boolean
+        default: true
       TIMEOUT:
         required: false
         type: number
         default: 5
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
   storybook-coverage:
@@ -87,17 +107,38 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Get PR number and gh-pages prefix
+        # Same convention as workflow 32: reports for pushes to main go to
+        # the top level of the gh-pages site, reports for PRs go under prs/<N>/.
+        id: target
+        run: |
+          pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          if [ "${pr_number}" = "null" ] || [ -z "${pr_number}" ]; then
+            label="main"
+            prefix=""
+          else
+            label="PR ${pr_number}"
+            prefix="prs/${pr_number}/"
+          fi
+          echo "label=${label}"
+          echo "prefix=${prefix}"
+          echo "label=${label}" >> "$GITHUB_OUTPUT"
+          echo "prefix=${prefix}" >> "$GITHUB_OUTPUT"
+
       - name: Report Storybook coverage
         # The script prints a Markdown report and also appends it to
-        # $GITHUB_STEP_SUMMARY.  It exits non-zero only when
-        # FAIL_ON_MISSING_STORIES is "true" and at least one story is missing.
+        # $GITHUB_STEP_SUMMARY, and writes an HTML copy for gh-pages.  It
+        # exits non-zero only when FAIL_ON_MISSING_STORIES is "true" and at
+        # least one story is missing.
         env:
           FAIL_ON_MISSING_STORIES: ${{ inputs.FAIL_ON_MISSING_STORIES }}
           INCLUDE_JS: ${{ inputs.INCLUDE_JS }}
           DIR_PAIRS: ${{ inputs.DIR_PAIRS }}
           SRC_ROOT: ${{ inputs.SRC_ROOT }}
+          LABEL: ${{ steps.target.outputs.label }}
         run: |
           args=(--src-root "${SRC_ROOT}")
+          args+=(--html-out storybook-coverage-report/index.html --label "${LABEL}")
           if [ "${INCLUDE_JS}" = "true" ]; then
             args+=(--include-js)
           fi
@@ -106,3 +147,26 @@ jobs:
           done
           echo "Running: python3 .ucsb-cs156-workflows/python/storybook_coverage.py ${args[*]}"
           python3 .ucsb-cs156-workflows/python/storybook_coverage.py "${args[@]}"
+
+      - name: Upload HTML report to artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: storybook-coverage
+          path: storybook-coverage-report
+          overwrite: true
+
+      - name: Deploy HTML report to gh-pages 🚀
+        # Publish even when FAIL_ON_MISSING_STORIES made the previous step
+        # fail; the report is most useful precisely then.
+        if: ${{ always() && inputs.PUBLISH_TO_GH_PAGES }}
+        uses: ucsb-cs156/wretry.action@v3.8.1
+        with:
+          action: JamesIves/github-pages-deploy-action@v4
+          attempt_limit: 3
+          attempt_delay: 5000
+          with: |
+            branch: gh-pages # The branch the action should deploy to.
+            folder: storybook-coverage-report # The folder where the HTML report was written
+            clean: true # Automatically remove deleted files from the deploy branch
+            target-folder: ${{ steps.target.outputs.prefix }}storybook-coverage # The folder that we serve the report from
