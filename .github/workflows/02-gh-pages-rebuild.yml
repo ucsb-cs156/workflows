@@ -411,6 +411,41 @@ jobs:
         overwrite: true
 
 
+  build-storybook-coverage-main:
+    name: g - Storybook coverage (main)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [initialize]
+    if: ${{inputs.FRONTEND}}
+    env:
+      destination: frontend/storybook-coverage
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 1
+    - name: Checkout ucsb-cs156/workflows scripts
+      uses: actions/checkout@v7
+      with:
+        repository: ucsb-cs156/workflows
+        ref: main
+        path: .ucsb-cs156-workflows
+        sparse-checkout: python
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.x"
+    - name: Storybook coverage report (see workflow 37)
+      run: |
+        python3 .ucsb-cs156-workflows/python/storybook_coverage.py \
+          --html-out ${{ env.destination }}/index.html --label main
+    - name: Upload storybook coverage report to Artifacts
+      if: always() # always upload artifacts, even if tests fail
+      uses: actions/upload-artifact@v7
+      with:
+        name: g-storybook-coverage
+        path: ${{ env.destination }}
+        overwrite: true
+
   a-build-javadoc-for-each-pr:
     name: a - Javadoc (${{ matrix.value.number }}, ${{ matrix.value.headRefName }})
     runs-on: ubuntu-latest
@@ -764,3 +799,47 @@ jobs:
         path: ${{ env.destination }}/mutation.html
         overwrite: true
 
+  g-build-storybook-coverage-for-each-pr:
+    name: g - Storybook coverage (${{ matrix.value.number }}, ${{ matrix.value.headRefName }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ inputs.FRONTEND && needs.initialize.outputs.pull_requests != '[]' && needs.initialize.outputs.pull_requests != '' }}
+
+    needs: [initialize]
+
+    env:
+      destination: frontend/storybook-coverage
+
+    strategy:
+      matrix:
+        value: ${{ fromJSON(needs.initialize.outputs.pull_requests)}}
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v7
+      with:
+        ref: ${{ matrix.value.headRefName }}
+        fetch-depth: 1
+        token: ${{ github.token }}
+    - name: Checkout ucsb-cs156/workflows scripts
+      uses: actions/checkout@v7
+      with:
+        repository: ucsb-cs156/workflows
+        ref: main
+        path: .ucsb-cs156-workflows
+        sparse-checkout: python
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.x"
+    - name: Storybook coverage report (see workflow 37)
+      run: |
+        python3 .ucsb-cs156-workflows/python/storybook_coverage.py \
+          --html-out ${{ env.destination }}/index.html --label "PR ${{ matrix.value.number }}"
+    - name: Upload storybook coverage report to Artifacts
+      if: always() # always upload artifacts, even if tests fail
+      uses: actions/upload-artifact@v7
+      with:
+        name: prs-${{ matrix.value.number }}-g-storybook-coverage
+        path: ${{ env.destination }}
+        overwrite: true

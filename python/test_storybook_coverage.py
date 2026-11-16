@@ -162,6 +162,62 @@ class RenderAndMainTests(unittest.TestCase):
         )
         self.assertEqual(rc, 0)
 
+    def test_render_html_includes_summary_missing_and_label(self):
+        results = sc.analyze(self.src, sc.DEFAULT_DIR_PAIRS)
+        env = dict(os.environ)
+        os.environ["GITHUB_REPOSITORY"] = "ucsb-cs156/proj-example"
+        os.environ["GITHUB_RUN_ID"] = "12345"
+        os.environ.pop("GITHUB_SERVER_URL", None)
+        try:
+            page = sc.render_html(results, Path("frontend/src"), label="PR 42")
+        finally:
+            os.environ.clear()
+            os.environ.update(env)
+        self.assertTrue(page.startswith("<!DOCTYPE html>"))
+        self.assertIn(
+            "<title>Storybook coverage report for ucsb-cs156/proj-example (PR 42)</title>",
+            page,
+        )
+        self.assertIn("2 of 3 components have a story (66.7%)", page)
+        self.assertIn("frontend/src/main/components/Foo/Missing.jsx", page)
+        self.assertIn(
+            "frontend/src/stories/components/Foo/Missing.stories.jsx", page
+        )
+        self.assertIn("Every component has a story", page)  # pages section
+        self.assertIn(
+            "https://github.com/ucsb-cs156/proj-example/actions/runs/12345", page
+        )
+
+    def test_render_html_escapes_paths(self):
+        touch(self.src / "main/components/Weird<Name>.jsx")
+        results = sc.analyze(self.src, sc.DEFAULT_DIR_PAIRS)
+        page = sc.render_html(results, Path("frontend/src"))
+        self.assertIn("Weird&lt;Name&gt;.jsx", page)
+        self.assertNotIn("Weird<Name>.jsx", page)
+
+    def test_main_html_out_writes_file_and_creates_directories(self):
+        out = self.src / "site" / "storybook-coverage" / "index.html"
+        env = dict(os.environ)
+        os.environ.pop("FAIL_ON_MISSING_STORIES", None)
+        os.environ.pop("GITHUB_REPOSITORY", None)  # keep the title predictable in CI
+        try:
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(
+                io.StringIO()
+            ):
+                rc = sc.main(
+                    [
+                        "--src-root", str(self.src), "--no-summary",
+                        "--html-out", str(out), "--label", "main",
+                    ]
+                )
+        finally:
+            os.environ.clear()
+            os.environ.update(env)
+        self.assertEqual(rc, 0)
+        page = out.read_text()
+        self.assertIn("Storybook coverage report (main)", page)
+        self.assertIn("2 of 3 components have a story", page)
+
     def test_github_step_summary_is_written(self):
         summary = self.src / "summary.md"
         env = dict(os.environ)

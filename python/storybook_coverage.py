@@ -16,7 +16,9 @@ file in the main tree checks whether a story file with the same relative path
 
 It prints a Markdown report to stdout.  When run inside GitHub Actions
 (i.e. when ``GITHUB_STEP_SUMMARY`` is set) the same report is also appended to
-the job summary so that it shows up on the workflow run page.
+the job summary so that it shows up on the workflow run page.  With
+``--html-out PATH`` it also writes a standalone HTML version of the report,
+suitable for publishing to a GitHub Pages site.
 
 Exit status is 0 unless ``--fail-on-missing`` is given (or the environment
 variable ``FAIL_ON_MISSING_STORIES`` is ``true``), in which case the exit
@@ -31,11 +33,14 @@ Usage (from the root of a project repo, with this repo checked out alongside):
     python3 path/to/workflows/python/storybook_coverage.py
     python3 path/to/workflows/python/storybook_coverage.py --fail-on-missing
     python3 path/to/workflows/python/storybook_coverage.py --dir main/layouts:stories/layouts
+    python3 path/to/workflows/python/storybook_coverage.py --html-out site/index.html --label "PR 123"
 """
 
 from __future__ import annotations
 
 import argparse
+import datetime
+import html
 import os
 import sys
 from dataclasses import dataclass, field
@@ -219,6 +224,147 @@ def render_markdown(results: list[PairResult], src_root: Path) -> str:
     return "\n".join(lines)
 
 
+_HTML_STYLE = """
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+       margin: 2em; max-width: 70em; }
+table { border-collapse: collapse; margin: 0.5em 0 1.5em 0; }
+th, td { border: 1px solid #999; padding: 0.3em 0.6em; text-align: left; }
+td.num { text-align: right; }
+th { background: #eee; }
+tbody tr:nth-child(even) { background: #f7f7f7; }
+code { font-size: 0.95em; }
+.ok { color: #1a7f37; }
+.missing { color: #b35900; }
+.meta { color: #555; font-size: 0.9em; }
+"""
+
+
+def _github_run_url() -> str | None:
+    """URL of the current GitHub Actions run, if we are running in one."""
+    server = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    run_id = os.environ.get("GITHUB_RUN_ID")
+    if repo and run_id:
+        return f"{server}/{repo}/actions/runs/{run_id}"
+    return None
+
+
+def render_html(
+    results: list[PairResult],
+    src_root: Path,
+    label: str = "",
+    generated_at: datetime.datetime | None = None,
+) -> str:
+    """Render the coverage report as a standalone HTML page.
+
+    ``label`` (e.g. ``"main"`` or ``"PR 123"``) is shown in the title.  The
+    page also records when it was generated and, when running in GitHub
+    Actions, links back to the workflow run that produced it.
+    """
+    esc = html.escape
+    total = sum(r.total for r in results)
+    covered = sum(len(r.covered) for r in results)
+    missing = sum(len(r.missing) for r in results)
+    percent = 100.0 if total == 0 else 100.0 * covered / total
+    repo = os.environ.get("GITHUB_REPOSITORY", "")
+    title = "Storybook coverage report"
+    if repo:
+        title += f" for {repo}"
+    if label:
+        title += f" ({label})"
+    if generated_at is None:
+        generated_at = datetime.datetime.now(datetime.timezone.utc)
+    run_url = _github_run_url()
+
+    out: list[str] = []
+    out.append("<!DOCTYPE html>")
+    out.append('<html lang="en">')
+    out.append("<head>")
+    out.append('<meta charset="utf-8">')
+    out.append(f"<title>{esc(title)}</title>")
+    out.append(f"<style>{_HTML_STYLE}</style>")
+    out.append("</head>")
+    out.append("<body>")
+    out.append(f"<h1>{esc(title)}</h1>")
+    out.append(
+        f'<p class="meta">Generated {esc(generated_at.strftime("%Y-%m-%d %H:%M %Z"))}'
+        + (f' by <a href="{esc(run_url)}">this GitHub Actions run</a>' if run_url else "")
+        + ". A component is covered when a story with the same relative path "
+        "exists under the stories directory (one-to-one mirroring convention).</p>"
+    )
+    out.append(
+        f"<p><strong>Overall: {covered} of {total} components have a story "
+        f"({percent:.1f}%). Missing: {missing}.</strong></p>"
+    )
+    out.append("<table>")
+    out.append(
+        "<thead><tr><th>Directory</th><th>Covered</th><th>Missing</th>"
+        "<th>Coverage</th></tr></thead>"
+    )
+    out.append("<tbody>")
+    for r in results:
+        out.append(
+            f"<tr><td><code>{esc((src_root / r.main_dir).as_posix())}</code></td>"
+            f'<td class="num">{len(r.covered)}</td>'
+            f'<td class="num">{len(r.missing)}</td>'
+            f'<td class="num">{r.percent:.1f}%</td></tr>'
+        )
+    out.append("</tbody></table>")
+
+    for r in results:
+        out.append(f"<h2>{esc(r.main_dir)}</h2>")
+        if r.missing:
+            out.append(f'<h3 class="missing">Missing stories ({len(r.missing)})</h3>')
+            out.append("<table>")
+            out.append(
+                "<thead><tr><th>Component</th><th>Expected story</th></tr></thead>"
+            )
+            out.append("<tbody>")
+            for rel in r.missing:
+                stem = _strip_component_suffix(
+                    rel, COMPONENT_EXTENSIONS + JS_EXTENSIONS
+                )
+                comp_path = (src_root / r.main_dir / rel).as_posix()
+                story_path = (
+                    src_root / r.stories_dir / f"{stem}.stories.jsx"
+                ).as_posix()
+                out.append(
+                    f"<tr><td><code>{esc(comp_path)}</code></td>"
+                    f"<td><code>{esc(story_path)}</code></td></tr>"
+                )
+            out.append("</tbody></table>")
+        else:
+            out.append('<p class="ok">&#x2705; Every component has a story.</p>')
+
+        if r.orphan_stories:
+            out.append(
+                f"<h3>Stories with no matching component ({len(r.orphan_stories)})</h3>"
+            )
+            out.append(
+                "<p>These story files do not line up with a component file of the "
+                "same name. This usually means a naming mismatch (e.g. the story "
+                "is named <code>FooTable</code> but the component is "
+                "<code>FoosTable</code>), or a component that was renamed or "
+                "deleted.</p>"
+            )
+            out.append("<ul>")
+            for stem in r.orphan_stories:
+                out.append(
+                    f"<li><code>{esc((src_root / r.stories_dir / stem).as_posix())}"
+                    ".stories.*</code></li>"
+                )
+            out.append("</ul>")
+
+    out.append(
+        '<p class="meta">Produced by '
+        '<a href="https://github.com/ucsb-cs156/workflows/blob/main/python/storybook_coverage.py">'
+        "storybook_coverage.py</a> in ucsb-cs156/workflows.</p>"
+    )
+    out.append("</body>")
+    out.append("</html>")
+    return "\n".join(out) + "\n"
+
+
 def _parse_dir_pair(value: str) -> tuple[str, str]:
     if ":" not in value:
         raise argparse.ArgumentTypeError(
@@ -273,6 +419,23 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Do not append the report to $GITHUB_STEP_SUMMARY even if set",
     )
+    parser.add_argument(
+        "--html-out",
+        type=Path,
+        metavar="PATH",
+        help=(
+            "Also write a standalone HTML version of the report to PATH "
+            "(parent directories are created as needed)"
+        ),
+    )
+    parser.add_argument(
+        "--label",
+        default="",
+        help=(
+            "Label for the HTML report title, e.g. 'main' or 'PR 123' "
+            "(only used with --html-out)"
+        ),
+    )
     args = parser.parse_args(argv)
 
     dir_pairs = args.dir_pairs or DEFAULT_DIR_PAIRS
@@ -286,6 +449,13 @@ def main(argv: list[str] | None = None) -> int:
         with open(summary_path, "a", encoding="utf-8") as f:
             f.write(report)
             f.write("\n")
+
+    if args.html_out is not None:
+        args.html_out.parent.mkdir(parents=True, exist_ok=True)
+        args.html_out.write_text(
+            render_html(results, args.src_root, label=args.label), encoding="utf-8"
+        )
+        print(f"\nWrote HTML report to {args.html_out}", file=sys.stderr)
 
     missing = sum(len(r.missing) for r in results)
     if args.fail_on_missing and missing > 0:

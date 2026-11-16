@@ -28,6 +28,7 @@ env:
   pitest_dest: target/pit-reports
   coverage_dest: frontend/coverage/lcov-report
   stryker_dest: frontend/reports/mutation
+  storybook_coverage_dest: frontend/storybook-coverage
 
 permissions:
   contents: write
@@ -290,6 +291,33 @@ jobs:
           clean: false # Automatically remove deleted files from the deploy branch
           target-folder: stryker # The folder that we serve our files from
 
+    - name: g-storybook-coverage Make directory in case it doesn't exist
+      if: ${{ inputs.FRONTEND }}
+      run: mkdir -p ${{ env.storybook_coverage_dest }}
+    - name: g-storybook-coverage Download artifact
+      if: ${{ inputs.FRONTEND }}
+      uses: dawidd6/action-download-artifact@v28
+      with:
+        workflow: 02-gh-pages-rebuild.yml
+        github_token: ${{secrets.GITHUB_TOKEN}}
+        name: g-storybook-coverage
+        path: ${{ env.storybook_coverage_dest }}
+        check_artifacts: true
+        if_no_artifact_found: error
+
+    - name: g-storybook-coverage Deploy Storybook coverage (main) 🚀
+      if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
+      uses: ucsb-cs156/wretry.action@v3.8.1
+      with:
+        action: JamesIves/github-pages-deploy-action@v4
+        attempt_limit: 3
+        attempt_delay: 5000
+        with: |
+          branch: gh-pages # The branch the action should deploy to.
+          folder:  ${{ env.storybook_coverage_dest }} # The folder where we put the files
+          clean: false # Automatically remove deleted files from the deploy branch
+          target-folder: storybook-coverage # The folder that we serve our files from
+
 
   deploy-doc-for-each-pr:
     name: PR ${{ matrix.value.number }} 
@@ -476,3 +504,31 @@ jobs:
           folder: ${{ env.stryker_dest }} # The folder where we put the files
           clean: false # Automatically remove deleted files from the deploy branch
           target-folder: prs/${{ matrix.value.number }}/stryker # The folder that we serve our files from
+
+    - name: g-storybook-coverage Make directory in case it doesn't exist
+      if: ${{ inputs.FRONTEND }}
+      run: mkdir -p ${{ env.storybook_coverage_dest }}
+
+    - name: g-storybook-coverage Download artifact
+      if: ${{ inputs.FRONTEND }}
+      uses: dawidd6/action-download-artifact@v28
+      with:
+        workflow: 02-gh-pages-rebuild.yml
+        github_token: ${{secrets.GITHUB_TOKEN}}
+        name: prs-${{ matrix.value.number }}-g-storybook-coverage
+        path: ${{ env.storybook_coverage_dest }}
+        check_artifacts: true
+        if_no_artifact_found: error
+
+    - name: g-storybook-coverage Deploy Storybook coverage (PR ${{ matrix.value.number }}) 🚀
+      if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
+      uses: ucsb-cs156/wretry.action@v3.8.1
+      with:
+        action: JamesIves/github-pages-deploy-action@v4
+        attempt_limit: 3
+        attempt_delay: 5000
+        with: |
+          branch: gh-pages # The branch the action should deploy to.
+          folder: ${{ env.storybook_coverage_dest }} # The folder where we put the files
+          clean: false # Automatically remove deleted files from the deploy branch
+          target-folder: prs/${{ matrix.value.number }}/storybook-coverage # The folder that we serve our files from
