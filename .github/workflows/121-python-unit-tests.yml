@@ -1,0 +1,29 @@
+# Runs the unit tests for the helper scripts in python/ whenever they (or
+# this workflow) change in a pull request.  Not a reusable workflow; this
+# only runs in the ucsb-cs156/workflows repo itself.
+
+name: 121-python-unit-tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - python/**
+      - .github/workflows/121-python-unit-tests.yml
+  push:
+    branches: [main]
+    paths:
+      - python/**
+      - .github/workflows/121-python-unit-tests.yml
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - name: Run python unit tests
+        run: python3 -m unittest discover -s python -p 'test_*.py' -v
