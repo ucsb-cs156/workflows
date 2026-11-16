@@ -1,0 +1,107 @@
+# Example invocation (report only; never fails the build):
+# jobs:
+#   storybook-coverage:
+#     uses: ucsb-cs156/workflows/.github/workflows/37-frontend-storybook-coverage.yml@main
+#
+# Example invocation that fails the check when any component lacks a story,
+# treats plain .js/.ts files as components too, and also checks layouts:
+# jobs:
+#   storybook-coverage:
+#     uses: ucsb-cs156/workflows/.github/workflows/37-frontend-storybook-coverage.yml@main
+#     with:
+#       FAIL_ON_MISSING_STORIES: true
+#       INCLUDE_JS: true
+#       DIR_PAIRS: "main/components:stories/components main/pages:stories/pages main/layouts:stories/layouts"
+
+name: "37-frontend-storybook-coverage: Report components without stories"
+
+# Reports which React components and pages under frontend/src/main do not
+# have a matching story under frontend/src/stories.  The frontend follows a
+# one-to-one directory mirroring convention:
+#
+#   frontend/src/main/components/Foo/Bar.jsx -> frontend/src/stories/components/Foo/Bar.stories.jsx
+#   frontend/src/main/pages/Foo/BarPage.jsx  -> frontend/src/stories/pages/Foo/BarPage.stories.jsx
+#
+# The report appears in the job summary of the workflow run
+# (Actions tab -> this run -> Summary).
+#
+# By default this workflow only *reports*; it never fails the build.  Once
+# every component has a story, pass FAIL_ON_MISSING_STORIES: true from the
+# calling workflow and the check will fail whenever coverage drops below 100%.
+#
+# The Python script that does the work is python/storybook_coverage.py in
+# this repo (unit tests: python/test_storybook_coverage.py).
+
+on:
+  workflow_call:
+    inputs:
+      FAIL_ON_MISSING_STORIES:
+        description: "Fail the job when at least one component has no story. Off by default (report only)."
+        required: false
+        type: boolean
+        default: false
+      INCLUDE_JS:
+        description: "Also treat plain .js/.ts files under the main tree as components that need stories. By default only .jsx/.tsx files count."
+        required: false
+        type: boolean
+        default: false
+      DIR_PAIRS:
+        description: "Space-separated MAIN_DIR:STORIES_DIR pairs, relative to SRC_ROOT, to compare. Replaces the default pairs (main/components:stories/components main/pages:stories/pages) when given."
+        required: false
+        type: string
+        default: ""
+      SRC_ROOT:
+        description: "Path to the frontend src directory in the calling repo."
+        required: false
+        type: string
+        default: "frontend/src"
+      TIMEOUT:
+        required: false
+        type: number
+        default: 5
+
+jobs:
+  storybook-coverage:
+    name: Storybook coverage report
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.TIMEOUT }}
+
+    steps:
+      - name: Checkout calling repo
+        uses: actions/checkout@v7
+
+      # Pull in just the python/ directory of this repo, at the same commit
+      # as the reusable workflow itself, so the script and the workflow
+      # always stay in sync.
+      - name: Checkout ucsb-cs156/workflows scripts
+        uses: actions/checkout@v7
+        with:
+          repository: ucsb-cs156/workflows
+          ref: ${{ github.job_workflow_sha }}
+          path: .ucsb-cs156-workflows
+          sparse-checkout: python
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Report Storybook coverage
+        # The script prints a Markdown report and also appends it to
+        # $GITHUB_STEP_SUMMARY.  It exits non-zero only when
+        # FAIL_ON_MISSING_STORIES is "true" and at least one story is missing.
+        env:
+          FAIL_ON_MISSING_STORIES: ${{ inputs.FAIL_ON_MISSING_STORIES }}
+          INCLUDE_JS: ${{ inputs.INCLUDE_JS }}
+          DIR_PAIRS: ${{ inputs.DIR_PAIRS }}
+          SRC_ROOT: ${{ inputs.SRC_ROOT }}
+        run: |
+          args=(--src-root "${SRC_ROOT}")
+          if [ "${INCLUDE_JS}" = "true" ]; then
+            args+=(--include-js)
+          fi
+          for pair in ${DIR_PAIRS}; do
+            args+=(--dir "${pair}")
+          done
+          echo "Running: python3 .ucsb-cs156-workflows/python/storybook_coverage.py ${args[*]}"
+          python3 .ucsb-cs156-workflows/python/storybook_coverage.py "${args[@]}"

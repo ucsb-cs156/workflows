@@ -3,6 +3,12 @@ Reusable workflows for ucsb-cs156 projects
 
 Each workflow starts with a comment showing an example invocation.
 
+* `37-frontend-storybook-coverage.yml`: reports which React components and pages under
+  `frontend/src/main` have no matching story under `frontend/src/stories` (one-to-one directory
+  mirroring convention), as a table in the job summary of each run. Report-only by default; pass
+  `FAIL_ON_MISSING_STORIES: true` to make it a failing check once a repo reaches 100%. The work is
+  done by `python/storybook_coverage.py` (tests in `python/test_storybook_coverage.py`, run by
+  `121-python-unit-tests.yml`).
 * `110-release-autograder.yml`: builds the Gradescope `<assignment>-Autograder-<tag>.zip` of an
   autograder repository (jpa00, jpa01, jpa02, jpa03, team01, team02, ...) and attaches it to the
   GitHub release for the pushed tag.
