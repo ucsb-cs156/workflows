@@ -70,14 +70,15 @@ jobs:
       - name: Checkout calling repo
         uses: actions/checkout@v7
 
-      # Pull in just the python/ directory of this repo, at the same commit
-      # as the reusable workflow itself, so the script and the workflow
-      # always stay in sync.
+      # Pull in just the python/ directory of this repo (from main, which is
+      # also the ref that callers use for this workflow).  To test a change
+      # to the script from a branch, point both the caller's `uses:` and
+      # this `ref:` at that branch.
       - name: Checkout ucsb-cs156/workflows scripts
         uses: actions/checkout@v7
         with:
           repository: ucsb-cs156/workflows
-          ref: ${{ github.job_workflow_sha }}
+          ref: main
           path: .ucsb-cs156-workflows
           sparse-checkout: python
 
