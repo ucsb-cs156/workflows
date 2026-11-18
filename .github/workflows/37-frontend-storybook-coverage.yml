@@ -160,13 +160,11 @@ jobs:
         # Publish even when FAIL_ON_MISSING_STORIES made the previous step
         # fail; the report is most useful precisely then.
         if: ${{ always() && inputs.PUBLISH_TO_GH_PAGES }}
-        uses: ucsb-cs156/wretry.action@v3.8.1
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          action: JamesIves/github-pages-deploy-action@v4
-          attempt_limit: 3
-          attempt_delay: 5000
-          with: |
-            branch: gh-pages # The branch the action should deploy to.
-            folder: storybook-coverage-report # The folder where the HTML report was written
-            clean: true # Automatically remove deleted files from the deploy branch
-            target-folder: ${{ steps.target.outputs.prefix }}storybook-coverage # The folder that we serve the report from
+          branch: gh-pages # The branch the action should deploy to.
+          folder: storybook-coverage-report # The folder where the HTML report was written
+          clean: true # Automatically remove deleted files from the deploy branch
+          target-folder: ${{ steps.target.outputs.prefix }}storybook-coverage # The folder that we serve the report from
+          force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+          attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)

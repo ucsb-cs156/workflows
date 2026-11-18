@@ -14,4 +14,9 @@ jobs:
         shell: bash
         run: |
           echo "::add-matcher::.github/actionlint-matcher.json"
-          ${{ steps.get_actionlint.outputs.executable }} -color
+          # -ignore: actionlint (as of 1.7.12) does not yet know the `queue` key
+          # under `concurrency:` (GitHub's FIFO queue, used by the gh-pages
+          # deploy jobs). Remove this once actionlint learns it.
+          ${{ steps.get_actionlint.outputs.executable }} -color \
+            -ignore 'unexpected key "queue" for "concurrency" section'
+

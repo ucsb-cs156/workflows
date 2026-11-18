@@ -95,18 +95,16 @@ jobs:
 
     - name: Deploy 🚀
       if: always() # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       env:
         RESET: ${{ inputs.RESET_GH_PAGES }}
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          folder: site # The folder the action should deploy.
-          branch: gh-pages
-          clean: ${{ inputs.RESET_GH_PAGES}}  # The ONLY place that we clean things up
-    
+        folder: site # The folder the action should deploy.
+        branch: gh-pages
+        clean: ${{ inputs.RESET_GH_PAGES}}  # The ONLY place that we clean things up
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
+
   initialize:
     name: Build Basic Site
     runs-on: ubuntu-latest

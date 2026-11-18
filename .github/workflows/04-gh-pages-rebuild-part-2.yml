@@ -91,15 +91,13 @@ jobs:
         
     - name: Deploy 🚀    
       if: always() # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          folder: site # The folder the action should deploy.
-          branch: gh-pages
-          clean: false # ONLY do this in workflow 01
+        folder: site # The folder the action should deploy.
+        branch: gh-pages
+        clean: false # ONLY do this in workflow 01
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
   deploy-main-docs:
     name: Deploy Documentation for main branch
@@ -146,16 +144,14 @@ jobs:
         ls -lRt
     - name: a-javadoc Deploy Javadoc (Main) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ${{ env.javadoc_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: javadoc # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder: ${{ env.javadoc_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: javadoc # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: b-chromatic Make directory in case it doesn't exist
       if: ${{ inputs.FRONTEND }}
@@ -172,16 +168,14 @@ jobs:
         if_no_artifact_found: error
     - name: b-chromatic Deploy chromatic (Main) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder:  ${{ env.chromatic_dest}} # The folder where the files come from
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: chromatic # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder:  ${{ env.chromatic_dest}} # The folder where the files come from
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: chromatic # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: c-jacoco Make directory in case it doesn't exist
       if: ${{ inputs.BACKEND }}
@@ -199,18 +193,15 @@ jobs:
 
     - name: c-jacoco Deploy Jacoco (Main) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ${{ env.jacoco_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: jacoco # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder: ${{ env.jacoco_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: jacoco # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
- 
     - name: d-pitest Make directory in case it doesn't exist
       if: ${{ inputs.BACKEND }}
       run: mkdir -p ${{ env.pitest_dest }}
@@ -226,16 +217,14 @@ jobs:
         if_no_artifact_found: error
     - name:  d-pitest Deploy Pitest (main) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ${{ env.pitest_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: pitest # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder: ${{ env.pitest_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: pitest # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: e-coverage Make directory in case it doesn't exist
       if: ${{ inputs.FRONTEND }}
@@ -253,16 +242,14 @@ jobs:
 
     - name: e-coverage Deploy Coverage (main) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder:  ${{ env.coverage_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: coverage # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder:  ${{ env.coverage_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: coverage # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: f-stryker Make directory in case it doesn't exist
       if: ${{ inputs.FRONTEND }}
@@ -280,16 +267,14 @@ jobs:
 
     - name: f-stryker Deploy Stryker (main) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder:  ${{ env.stryker_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: stryker # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder:  ${{ env.stryker_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: stryker # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: g-storybook-coverage Make directory in case it doesn't exist
       if: ${{ inputs.FRONTEND }}
@@ -307,17 +292,14 @@ jobs:
 
     - name: g-storybook-coverage Deploy Storybook coverage (main) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder:  ${{ env.storybook_coverage_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: storybook-coverage # The folder that we serve our files from
-
+        branch: gh-pages # The branch the action should deploy to.
+        folder:  ${{ env.storybook_coverage_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: storybook-coverage # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
   deploy-doc-for-each-pr:
     name: PR ${{ matrix.value.number }} 
@@ -353,16 +335,14 @@ jobs:
 
     - name: a-javadoc Deploy Javadoc (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ${{ env.javadoc_dest  }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: prs/${{ matrix.value.number }}/javadoc # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder: ${{ env.javadoc_dest  }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: prs/${{ matrix.value.number }}/javadoc # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: b-chromatic Make directory in case it doesn't exist
       if: ${{ inputs.FRONTEND }}
@@ -381,16 +361,14 @@ jobs:
 
     - name: b-chromatic Deploy chromatic (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ${{ env.chromatic_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: prs/${{ matrix.value.number }}/chromatic # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder: ${{ env.chromatic_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: prs/${{ matrix.value.number }}/chromatic # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: c-jacoco Make directory in case it doesn't exist
       if: ${{ inputs.BACKEND }}
@@ -409,16 +387,14 @@ jobs:
 
     - name: c-jacoco Deploy Jacoco (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ${{ env.jacoco_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: prs/${{ matrix.value.number }}/jacoco # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder: ${{ env.jacoco_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: prs/${{ matrix.value.number }}/jacoco # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: d-pitest Make directory in case it doesn't exist
       if: ${{ inputs.BACKEND }}
@@ -437,17 +413,14 @@ jobs:
 
     - name: d-pitest Deploy Pitest (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.BACKEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ${{ env.pitest_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: prs/${{ matrix.value.number }}/pitest # The folder that we serve our files from
-        
+        branch: gh-pages # The branch the action should deploy to.
+        folder: ${{ env.pitest_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: prs/${{ matrix.value.number }}/pitest # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: e-coverage Make directory in case it doesn't exist
       if: ${{ inputs.FRONTEND }}
@@ -466,16 +439,14 @@ jobs:
 
     - name: e-coverage Deploy Coverage (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ${{ env.coverage_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: prs/${{ matrix.value.number }}/coverage # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder: ${{ env.coverage_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: prs/${{ matrix.value.number }}/coverage # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: f-stryker Make directory in case it doesn't exist
       if: ${{ inputs.FRONTEND }}
@@ -494,16 +465,14 @@ jobs:
 
     - name: f-stryker Deploy Stryker (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ${{ env.stryker_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: prs/${{ matrix.value.number }}/stryker # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder: ${{ env.stryker_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: prs/${{ matrix.value.number }}/stryker # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
 
     - name: g-storybook-coverage Make directory in case it doesn't exist
       if: ${{ inputs.FRONTEND }}
@@ -522,13 +491,11 @@ jobs:
 
     - name: g-storybook-coverage Deploy Storybook coverage (PR ${{ matrix.value.number }}) 🚀
       if: ${{ inputs.FRONTEND }} # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ${{ env.storybook_coverage_dest }} # The folder where we put the files
-          clean: false # Automatically remove deleted files from the deploy branch
-          target-folder: prs/${{ matrix.value.number }}/storybook-coverage # The folder that we serve our files from
+        branch: gh-pages # The branch the action should deploy to.
+        folder: ${{ env.storybook_coverage_dest }} # The folder where we put the files
+        clean: false # Automatically remove deleted files from the deploy branch
+        target-folder: prs/${{ matrix.value.number }}/storybook-coverage # The folder that we serve our files from
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
