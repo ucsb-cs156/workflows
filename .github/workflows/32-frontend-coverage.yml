@@ -87,16 +87,11 @@ jobs:
         if: always() # always upload artifacts, even if tests fail
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        uses: ucsb-cs156/wretry.action@v3.8.1
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          action: JamesIves/github-pages-deploy-action@v4.8.0
-          attempt_limit: 3
-          attempt_delay: 5000
-          with: |
-            branch: gh-pages # The branch the action should deploy to.
-            folder: frontend/coverage # The folder where the javadoc files are located
-            clean: true # Automatically remove deleted files from the deploy branch
-            target-folder: ${{env.prefix}}coverage # The folder that we serve our javadoc files from
-
-
-  
+          branch: gh-pages # The branch the action should deploy to.
+          folder: frontend/coverage # The folder where the javadoc files are located
+          clean: true # Automatically remove deleted files from the deploy branch
+          target-folder: ${{env.prefix}}coverage # The folder that we serve our javadoc files from
+          force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+          attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)

@@ -62,12 +62,10 @@ jobs:
 
     - name: Deploy 🚀
       if: always() # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          folder: site # The folder the action should deploy.
-          branch: gh-pages
-          clean: false # Automatically remove deleted files from the deploy branch
+        folder: site # The folder the action should deploy.
+        branch: gh-pages
+        clean: false # Automatically remove deleted files from the deploy branch
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)

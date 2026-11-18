@@ -8,6 +8,11 @@
 #       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 #     with:
 #       TIMEOUT: 10
+#
+# Publishing to gh-pages happens in a separate job (deploy-jacoco-report) that
+# sits in a repo-wide concurrency group, so publishes from every workflow that
+# shares the group wait their turn (FIFO) instead of racing for the branch.
+# The build job is NOT in the group, so builds still run in parallel.
 
 name: "12-backend-jacoco: Java Test Coverage (Jacoco)"
 
@@ -35,6 +40,9 @@ jobs:
   build-jacoco-report:
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.TIMEOUT }}
+    outputs:
+      prefix: ${{ steps.get-pr-num.outputs.prefix }}
+      report_exists: ${{ steps.get-pr-num.outputs.report_exists }}
 
     steps:
     - uses: actions/checkout@v7
@@ -49,14 +57,13 @@ jobs:
     - name: Build with Maven
       run: mvn -ntp -B test jacoco:report verify
 
-    - name: Get PR number
+    - name: Get PR number and check for report
       if: always() # always upload artifacts, even if tests fail
       id: get-pr-num
       run: |
         echo "GITHUB_EVENT_PATH=${GITHUB_EVENT_PATH}"
         pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
         echo "pr_number=${pr_number}" 
-        echo "pr_number=${pr_number}" >> "$GITHUB_ENV"
 
         if [ "${pr_number}" == "null" ]; then
           prefix=""
@@ -64,18 +71,55 @@ jobs:
           prefix="prs/${pr_number}/"
         fi
         echo "prefix=${prefix}"
-        echo "prefix=${prefix}" >> "$GITHUB_ENV"
-    
-    - name: Deploy 🚀
-      if: always() # always upload artifacts, even if tests fail
-      uses: ucsb-cs156/wretry.action@v3.8.1
+        echo "prefix=${prefix}" >> "$GITHUB_OUTPUT"
+
+        if [ -d target/site/jacoco ]; then
+          echo "report_exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "report_exists=false" >> "$GITHUB_OUTPUT"
+          echo "::warning::target/site/jacoco not found; nothing to publish"
+        fi
+
+    - name: Upload jacoco report as artifact
+      if: ${{ always() && steps.get-pr-num.outputs.report_exists == 'true' }}
+      uses: actions/upload-artifact@v7
       with:
-        action: JamesIves/github-pages-deploy-action@v4
-        attempt_limit: 3
-        attempt_delay: 5000
-        with: |
-          branch: gh-pages # The branch the action should deploy to.
-          folder: target/site/jacoco # The folder where mvn -ntp puts the files
-          clean: true # Automatically remove deleted files from the deploy branch
-          target-folder: ${{env.prefix}}jacoco # The folder that we serve our files from
-          token: ${{ secrets.GH_TOKEN }}
+        name: jacoco-report
+        path: target/site/jacoco
+        if-no-files-found: error
+
+  deploy-jacoco-report:
+    name: Publish jacoco report to gh-pages
+    needs: [build-jacoco-report]
+    # Publish even when the build job failed (e.g. failing tests), as long as a
+    # report was produced. Skip if the build was cancelled or produced nothing.
+    if: ${{ always() && needs.build-jacoco-report.result != 'cancelled' && needs.build-jacoco-report.outputs.report_exists == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # One group per project repo, shared by every workflow that publishes to
+    # gh-pages. queue: max gives true FIFO queuing; the default (queue: single)
+    # would CANCEL the pending deploy when a third one arrives, losing a report.
+    # NOTE: actionlint does not know the queue key yet; see 120-workflow-linter.yml.
+    concurrency:
+      group: gh-pages-${{ github.repository }}
+      cancel-in-progress: false
+      queue: max
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Download jacoco report
+      uses: actions/download-artifact@v8
+      with:
+        name: jacoco-report
+        path: target/site/jacoco
+
+    - name: Deploy 🚀
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: gh-pages # The branch the action should deploy to.
+        folder: target/site/jacoco # The folder where mvn -ntp puts the files
+        clean: true # Automatically remove deleted files from the deploy branch
+        target-folder: ${{ needs.build-jacoco-report.outputs.prefix }}jacoco # The folder that we serve our files from
+        token: ${{ secrets.GH_TOKEN }}
+        force: false # rebase onto commits pushed by concurrent deploys instead of force-pushing over them
+        attempt-limit: 10 # push/rebase attempts before giving up (action's built-in retry)
