@@ -45,10 +45,29 @@ jobs:
             sleep 60
           done
 
-          # Check if any of the other checks failed
-          failed=$(echo "$statuses" | jq '[.[] | select(.name != "enforce" and .name != "enforce / enforce" and .conclusion != "success" and ((.name == "deploy" and .conclusion != "skipped") or .name != "deploy"))] | length')
+          # Check if any of the other checks failed.
+          #
+          # Exemptions (checks that are not treated as failures):
+          #   - "deploy" with conclusion "skipped": the review-app deploy job is
+          #     skipped when review apps are not enabled for the repo.
+          #   - "Publish Docker Image" with conclusion "cancelled": workflow 46
+          #     (46-tag-docker-image) uses cancel-in-progress concurrency, so a
+          #     run can be cancelled by another run for the same ref/SHA.  Any
+          #     real problem that would make the docker build fail also fails
+          #     other checks (e.g. the smoke test), so a cancellation here is
+          #     not a reason to block the PR.
+          failed_checks=$(echo "$statuses" | jq '
+            [ .[]
+              | select(.name != "enforce" and .name != "enforce / enforce")
+              | select(.conclusion != "success")
+              | select((.name == "deploy" and .conclusion == "skipped") | not)
+              | select((.name == "Publish Docker Image" and .conclusion == "cancelled") | not)
+              | {name: .name, status: .status, conclusion: .conclusion}
+            ]')
+          failed=$(echo "$failed_checks" | jq 'length')
           if [ "$failed" -gt 0 ]; then
-            echo "Some required checks failed."
+            echo "Some required checks failed:"
+            echo "$failed_checks"
             exit 1
           fi
 
