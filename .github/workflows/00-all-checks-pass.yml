@@ -46,7 +46,7 @@ jobs:
           done
 
           # Check if any of the other checks failed
-          failed=$(echo "$statuses" | jq '[.[] | select(.name != "enforce" and .name != "enforce / enforce" and .conclusion != "success")] | length')
+          failed=$(echo "$statuses" | jq '[.[] | select(.name != "enforce" and .name != "enforce / enforce" and .conclusion != "success" and ((.name == "deploy" and .conclusion != "skipped") or .name != "deploy"))] | length')
           if [ "$failed" -gt 0 ]; then
             echo "Some required checks failed."
             exit 1
