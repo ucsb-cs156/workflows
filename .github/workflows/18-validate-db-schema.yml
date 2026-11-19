@@ -51,14 +51,17 @@ jobs:
         ELAPSED=0
         TIMEOUT=150
         while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
+          CURL_EXIT_CODE="$(curl -sf "http://localhost:8080"; echo "$?")"
           if curl -sf "http://localhost:8080"; then
             echo "server successfully reached. DB is valid."
             kill "$SERVER_PROCESS_ID"
             exit 0
+          elif ! kill -0 $SERVER_PROCESS_ID &> /dev/null; then
+            break;
           fi
           sleep 30
           ELAPSED=$((ELAPSED + 30))
         done
-        echo "Your database migrations do not match your entity files. Please inspect any changes made to your migration files or entities."
-        echo "The problematic changes should be listed by Spring Boot above."
+        echo "::error::Your database migrations do not match your entity files. Please inspect any changes made to your migration files or entities."
+        echo "::error::The problematic changes should be listed by Spring Boot above."
         exit 1
